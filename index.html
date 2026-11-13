@@ -178,6 +178,7 @@ main .task-list {
 .task-content {
   line-height: 1.5;
   word-break: break-all;
+  touch-action: manipulation;
 }
 
 /* Long-press copy: green highlight shows while you're selecting text */
@@ -332,29 +333,48 @@ function createTasks(task) {
 
    const p = div.lastElementChild;
 
-    //# Line-Through Task
-    p.ondblclick = function () {
+    //# Line-Through Task (shared by double-click on desktop and double-tap on mobile)
+    const toggleLine = function () {
 
         window.getSelection().removeAllRanges();
         const pValue = this.firstChild.nodeValue.trim()
-        
-        let lineArr = JSON.parse(localStorage.getItem('line')) || []; 
- 
+
+        let lineArr = JSON.parse(localStorage.getItem('line')) || [];
+
         if (this.classList.contains('line')) {
 
             lineArr = lineArr.filter(e => e != pValue);
             this.classList.remove('line');
-            
+
         } else {
-            
+
             lineArr.push(pValue);
             this.classList.add('line');
         }
 
         localStorage.setItem('line', JSON.stringify(lineArr));
-        
+
         localStorageUpdate()
     }
+
+    p.ondblclick = toggleLine;
+
+    //# Mobile: detect double-TAP ourselves, so the browser never
+    // opens the copy/paste toolbar on it. Long-press copy stays intact.
+    let lastTap = 0;
+    div.addEventListener('touchend', function (e) {
+
+        if (e.target.classList.contains('state')) return;
+
+        const now = Date.now();
+        if (now - lastTap <= 300) {
+            e.preventDefault();
+            toggleLine.call(p);
+            lastTap = 0;
+        } else {
+            lastTap = now;
+        }
+    }, false);
 }
 
 
