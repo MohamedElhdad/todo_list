@@ -132,6 +132,15 @@ document.addEventListener('contextmenu', function (e) {
 
 
 
+//# Detect Arabic script in a string (tasks/input get heavier Arabic styling)
+const hasArabic = function (text) {
+    return /[\u0600-\u06FF\u0750-\u077F\u0870-08FF\uFB50-\uFDFF\uFE70-\uFEFC]/.test(text);
+};
+
+const updateScriptClass = function (el) {
+    el.classList.toggle('ar', hasArabic(el.value));
+};
+
 if (sessionStorage.getItem('task-input')) {
 
     taskInput.value = sessionStorage.getItem('task-input');
@@ -140,6 +149,7 @@ if (sessionStorage.getItem('task-input')) {
 //# The add button stays disabled until the input has real text (spaces don't count)
 const updateAddButton = function () {
     addBtn.disabled = taskInput.value.trim() === '';
+    updateScriptClass(taskInput);
 };
 
 taskInput.oninput = function () {
@@ -195,6 +205,7 @@ function createTasks(task) {
     const div = document.createElement('div');
     div.className = 'task';
     div.innerHTML = ` <p class="task-content">${task}</p>`;
+    div.querySelector('.task-content').classList.toggle('ar', hasArabic(task));
     const deleteInput = document.createElement('input');
     deleteInput.type = 'checkbox';
     deleteInput.className = 'state';
