@@ -65,6 +65,8 @@ body {
 header {
   padding-block: 10px;
   gap: 15px;
+  /* anchor point for the absolutely positioned theme toggle */
+  position: relative;
 }
 
 header h1 {
@@ -122,6 +124,12 @@ form .add {
   font-size: 24px;
   transition-duration: 200ms;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Add button stays muted until there is real text in the input */
+form .add:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 
@@ -367,9 +375,9 @@ main .task-list {
   color: white;
 }
 
-/* Theme toggle (fixed top-right) */
+/* Theme toggle (anchored to the header, top-right - scrolls with the page) */
 .theme-toggle {
-  position: fixed;
+  position: absolute;
   top: 14px;
   right: 14px;
   z-index: 15;

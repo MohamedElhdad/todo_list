@@ -133,34 +133,45 @@ document.addEventListener('contextmenu', function (e) {
 
 
 if (sessionStorage.getItem('task-input')) {
-    
+
     taskInput.value = sessionStorage.getItem('task-input');
 }
 
+//# The add button stays disabled until the input has real text (spaces don't count)
+const updateAddButton = function () {
+    addBtn.disabled = taskInput.value.trim() === '';
+};
+
 taskInput.oninput = function () {
-    
+
     sessionStorage.setItem('task-input', this.value);
+    updateAddButton();
 }
+
+updateAddButton();
 
 
 addBtn.onclick = function () {
-    
-    if (taskInput.value !== '') {
-      
+
+    const taskText = taskInput.value.trim();
+
+    if (taskText !== '') {
+
       this.style.color = 'black';
       this.style.backgroundColor = 'var(--soft-green)';
-      
+
       setTimeout(() => {
         this.style.color = 'white';
         this.style.backgroundColor = 'dimgray';
       }, 130);
-        
-      createTasks(taskInput.value);
+
+      createTasks(taskText);
 
       sessionStorage.setItem('task-input', '');
-      
+
       taskInput.value = '';
-      taskInput.focus();  
+      updateAddButton();
+      taskInput.focus();
     }
 }
 
