@@ -134,7 +134,12 @@ document.addEventListener('contextmenu', function (e) {
 
 //# Detect Arabic script in a string (tasks/input get heavier Arabic styling)
 const hasArabic = function (text) {
-    return /[\u0600-\u06FF\u0750-\u077F\u0870-08FF\uFB50-\uFDFF\uFE70-\uFEFC]/.test(text);
+    try {
+        return /\p{Script=Arabic}/u.test(text);
+    } catch (e) {
+        // Fallback for engines without Unicode property escape support
+        return /[\u0600-\u06FF\u0750-\u077F]/.test(text);
+    }
 };
 
 const updateScriptClass = function (el) {
