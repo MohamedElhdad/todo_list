@@ -133,7 +133,7 @@ form input {
   border: none;
   padding: 6px 12px;
   outline: 0;
-  font-size: 20px;
+  font-size: 22px;
   flex: 1;
 }
 
@@ -290,6 +290,7 @@ main .task-list {
   line-height: 1.5;
   word-break: break-all;
   touch-action: manipulation;
+  font-size: 17px;
   /* Native strikethrough, hidden until the task is struck (.line) */
   text-decoration: line-through;
   text-decoration-color: transparent;
