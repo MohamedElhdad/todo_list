@@ -40,7 +40,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--darky);
+  background-color: var(--border);
   border-radius: 4px;
 }
 
@@ -60,16 +60,18 @@ body {
   --text: hsl(0, 0%, 96%);
   --border: #555;
   --danger: hsl(0, 55%, 50%);
+  --shadow: none;
   color-scheme: dark;
 }
 
 /* Light theme */
 [data-theme="light"] {
-  --darky: hsl(0, 0%, 99%);
-  --bg: hsl(200, 25%, 93%);
-  --text: hsl(200, 15%, 16%);
-  --border: hsl(200, 10%, 78%);
-  --danger: hsl(0, 60%, 48%);
+  --darky: hsl(0, 0%, 100%);
+  --bg: hsl(210, 25%, 92%);
+  --text: hsl(210, 20%, 15%);
+  --border: hsl(210, 12%, 82%);
+  --danger: hsl(4, 74%, 50%);
+  --shadow: 0 2px 6px hsla(210, 40%, 25%, 0.1);
   color-scheme: light;
 }
 
@@ -178,6 +180,7 @@ main .task-list {
 /* Task object styling */
 .task {
   background-color: var(--darky);
+  box-shadow: var(--shadow);
   display: flex;
   align-items: start;
   padding: 12px;
