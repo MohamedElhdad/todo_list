@@ -12,7 +12,7 @@
 	    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
 	  </script>
 	  <style>
-		/* Self-hosted fonts: Poppins (Latin) + Tajawal (Arabic) */
+		/* Self-hosted fonts: Poppins (Latin) + Cairo (Arabic, variable weight) */
 @font-face {
   font-family: 'Poppins';
   font-style: normal;
@@ -32,21 +32,12 @@
 }
 
 @font-face {
-  font-family: 'Tajawal';
+  font-family: 'Cairo';
   font-style: normal;
-  font-weight: 500;
+  font-weight: 200 1000;
   font-display: swap;
-  src: url('fonts/tajawal-500-arabic.woff2') format('woff2');
-  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
-}
-
-@font-face {
-  font-family: 'Tajawal';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('fonts/tajawal-700-arabic.woff2') format('woff2');
-  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+  src: url('fonts/cairo-arabic-var.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F;
 }
 
 		/* Global styles for all  elements */
@@ -56,13 +47,6 @@
   margin: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-}
-
-/* Kill Chrome Android font boosting: the phone must render exactly
-   like desktop (system font scale won't inflate page text) */
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
 }
 
 /* Body styling */
@@ -96,13 +80,6 @@ body {
   font-family: var(--font);
 }
 
-/* Slightly heavier Arabic text: Tajawal 500 for tasks and input,
-   while Latin stays on Poppins 400 (weight 500 falls back to 400) */
-.task-content,
-form .task-input {
-  font-weight: 500;
-}
-
 /* CSS Variables for reusable colors */
 :root {
   --darky: hsl(200, 5%, 20%);
@@ -112,7 +89,7 @@ form .task-input {
   --border: #555;
   --danger: hsl(0, 55%, 50%);
   --shadow: none;
-  --font: 'Poppins', 'Tajawal', sans-serif;
+  --font: 'Poppins', 'Cairo', sans-serif;
   color-scheme: dark;
 }
 
@@ -153,8 +130,7 @@ form {
   padding: 6px;
   border-radius: 50px;
   transition-duration: 200ms;
-  /* Hard cap: can never exceed the screen, and matches the task cards' width */
-  width: min(400px, 90vw);
+  min-width: min(80vw, 400px);
   display: flex;
   justify-content: space-between;
 }
@@ -166,11 +142,11 @@ form input {
   font-size: 20px;
   flex: 1;
   font-family: inherit;
-  min-width: 0;
 }
 
 form .task-input {
   background-color: transparent;
+  flex-shrink: 0;
   user-select: text;
   -webkit-user-select: text;
 }
