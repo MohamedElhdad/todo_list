@@ -1,0 +1,415 @@
+		/* Global styles for all  elements */
+* {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Body styling */
+body {
+  min-height: 100vh;
+  background-color: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  overflow-y: scroll;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background-color 250ms ease, color 250ms ease;
+}
+
+::-webkit-scrollbar {
+  appearance: none;
+  background-color: transparent;
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 4px;
+}
+
+/* Flexbox container class */
+.box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: sans-serif;
+}
+
+/* CSS Variables for reusable colors */
+:root {
+  --darky: hsl(200, 5%, 20%);
+  --soft-green: rgb(149, 218, 162);
+  --bg: hsl(200 20% 10%);
+  --text: hsl(0, 0%, 96%);
+  --border: #555;
+  --danger: hsl(0, 55%, 50%);
+  --shadow: none;
+  color-scheme: dark;
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --darky: hsl(0, 0%, 100%);
+  --bg: hsl(210, 25%, 92%);
+  --text: hsl(210, 20%, 15%);
+  --border: hsl(210, 12%, 82%);
+  --danger: hsl(4, 74%, 50%);
+  --shadow: 0 2px 6px hsla(210, 40%, 25%, 0.1);
+  color-scheme: light;
+}
+
+/* Header styling */
+header {
+  padding-block: 10px;
+  gap: 15px;
+}
+
+header h1 {
+  letter-spacing: 1px;
+  font-weight: 900;
+  font-family: cursive;
+  font-size: 45px;
+
+  >span {
+    color: var(--soft-green);
+    font-size: 55px;
+
+    
+  }
+}
+
+/* Form styling */
+form {
+  background-color: var(--darky);
+  padding: 6px;
+  border-radius: 50px;
+  transition-duration: 200ms;
+  min-width: min(80vw, 400px);
+  display: flex;
+  justify-content: space-between;
+}
+
+form input {
+  border: none;
+  padding: 6px 12px;
+  outline: 0;
+  font-size: 20px;
+  flex: 1;
+}
+
+form .task-input {
+  background-color: transparent;
+  flex-shrink: 0;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+form:has(.task-input:focus-visible) {
+  box-shadow: 0 0 0 4px #555;
+}
+
+form .add {
+  background-color: dimgray;
+  color: white;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  transition-duration: 200ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+
+/* Main section styling */
+main header {
+  padding: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: min(680px, 90vw);
+}
+
+
+main header .clear {
+  border: none;
+  background-color: var(--danger);
+  font-weight: bold;
+  border-radius: 20px;
+  padding: 6px 10px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 150ms;
+}
+
+main header .clear:hover {
+  filter: brightness(1.15);
+}
+
+
+main .task-list {
+  padding: 10px;
+  width: min(700px, 90vw);
+  will-change: contents;
+}
+
+.task-list div.empty {
+  color: gray;
+  text-align: center;
+  margin-block: 20px;
+}
+
+/* Task object styling */
+.task {
+  background-color: var(--darky);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: start;
+  padding: 12px;
+  gap: 10px;
+  border-radius: 10px;
+  margin-block-end: 10px;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.2);
+  border: 1px solid var(--border);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.task.done {
+  opacity: 0;
+  transform: translateY(-40px) scale(.5);
+}
+
+/* Custom checkbox - matches the app colors */
+.task .state {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-color 150ms, border-color 150ms, transform 150ms;
+}
+
+.task .state:hover {
+  border-color: #888;
+}
+
+.task .state:checked {
+  background-color: var(--soft-green);
+  border-color: var(--soft-green);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231d2021' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  background-size: 12px 12px;
+}
+
+.task .state:active {
+  transform: scale(0.85);
+}
+
+/* Trash delete button */
+.task .delete {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--danger);
+  transition: transform 150ms, color 150ms, filter 150ms;
+}
+
+.task .delete svg {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.task .delete:hover {
+  color: hsl(0, 70%, 60%);
+  transform: scale(1.15);
+}
+
+.task-content {
+  line-height: 1.5;
+  word-break: break-all;
+  touch-action: manipulation;
+  /* Native strikethrough, hidden until the task is struck (.line) */
+  text-decoration: line-through;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1.5px;
+  transition: text-decoration-color 0.2s ease;
+}
+
+/* Fake highlight shown by our own long-press copy */
+.copying {
+  background-color: var(--soft-green);
+  color: var(--darky);
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px var(--soft-green);
+}
+
+/* Toast notification (like native Android) */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  white-space: nowrap;
+  background-color: var(--soft-green);
+  color: hsl(200 20% 10%);
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms, transform 200ms;
+  z-index: 10;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Undo variant: dark snackbar with a green action (Android style).
+   The whole snackbar is tappable to undo. */
+.toast.undo {
+  pointer-events: auto;
+  cursor: pointer;
+  background-color: var(--darky);
+  color: var(--text);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.toast-action {
+  pointer-events: none; /* the toast itself handles the tap */
+  margin-left: 16px;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--soft-green);
+  font-family: sans-serif;
+  font-weight: bold;
+  letter-spacing: 1px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Clear-all confirmation popup */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal {
+  background-color: var(--darky);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 30px;
+  text-align: center;
+  color: var(--text);
+  font-family: sans-serif;
+  min-width: 240px;
+}
+
+.modal p {
+  font-size: 17px;
+  margin-block-end: 18px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal button {
+  border: none;
+  border-radius: 20px;
+  padding: 8px 26px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.modal .modal-yes {
+  background-color: var(--danger);
+  color: white;
+}
+
+.modal .modal-no {
+  background-color: var(--border);
+  color: white;
+}
+
+/* Theme toggle (fixed top-right) */
+.theme-toggle {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 15;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 200ms, background-color 200ms, color 250ms;
+}
+
+.theme-toggle:hover {
+  background-color: hsla(0, 0%, 50%, 0.15);
+  transform: rotate(15deg) scale(1.08);
+}
+
+.theme-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Dark theme shows the sun (tap = go light), light theme shows the moon */
+.theme-toggle .icon-moon { display: none; }
+
+[data-theme="light"] .theme-toggle .icon-sun { display: none; }
+[data-theme="light"] .theme-toggle .icon-moon { display: block; }
+
+.count{
+  color: red;
+}
+
+/* Strike: native line-through fades in red — always centered on the
+   glyphs and only as wide as the text itself, on every line. */
+.line {
+  text-decoration-color: rgba(255, 0, 0, 0.8);
+}
+
+
