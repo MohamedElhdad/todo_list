@@ -416,7 +416,9 @@ function localStorageUpdate() {
     const tasksArr = [];
 
     document.querySelectorAll('.task').forEach(e => {
-        tasksArr.push(e.children[1].firstChild.nodeValue.trim());
+        const p = e.children[1];
+        const text = (p && p.firstChild) ? p.firstChild.nodeValue.trim() : '';
+        if (text) tasksArr.push(text);
     });
 
     localStorage.setItem('tasks', JSON.stringify(tasksArr));
