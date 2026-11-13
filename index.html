@@ -234,6 +234,11 @@ main .task-list {
   line-height: 1.5;
   word-break: break-all;
   touch-action: manipulation;
+  /* Native strikethrough, hidden until the task is struck (.line) */
+  text-decoration: line-through;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1.5px;
+  transition: text-decoration-color 0.2s ease;
 }
 
 /* Fake highlight shown by our own long-press copy */
@@ -272,31 +277,10 @@ main .task-list {
   color: red;
 }
 
-@keyframes line{
-  0%   { background-size: 0% 1.5em; }
-  100% { background-size: 100% 1.5em; }
-}
-
-/* Strike as an overlay ABOVE the text, repeating once per text line
-   (1.5em = the line-height 1.5), so it crosses EVERY line. */
+/* Strike: native line-through fades in red — always centered on the
+   glyphs and only as wide as the text itself, on every line. */
 .line {
-  position: relative;
-}
-
-.line::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: linear-gradient(to bottom, rgba(255, 0, 0, 0.8) 0 1.5px, transparent 1.5px);
-  background-repeat: repeat-y;
-  background-size: 100% 1.5em;
-  background-position: 0 0.62em;
-  animation-name: line;
-  animation-duration: 0.2s;
-  animation-timing-function: linear;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
+  text-decoration-color: rgba(255, 0, 0, 0.8);
 }
 
 
