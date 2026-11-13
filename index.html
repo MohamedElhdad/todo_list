@@ -7,7 +7,10 @@
 	  <link rel="stylesheet" href="main.css" type="text/css">
 	  <link rel="manifest" href="manifest.json">
 	  <meta name="theme-color" content="#141B1F">
-	  <title>Todo-List</title>
+	  <title>ListX</title>
+	  <script>/* Apply the saved theme before first paint (no flash) */
+	    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+	  </script>
 	  <style>
 		/* Global styles for all  elements */
 * {
@@ -21,11 +24,13 @@
 /* Body styling */
 body {
   min-height: 100vh;
-  background-color: hsl(200 20% 10%);
+  background-color: var(--bg);
+  color: var(--text);
   overflow-x: hidden;
   overflow-y: scroll;
   user-select: none;
   -webkit-user-select: none;
+  transition: background-color 250ms ease, color 250ms ease;
 }
 
 ::-webkit-scrollbar {
@@ -51,7 +56,21 @@ body {
 :root {
   --darky: hsl(200, 5%, 20%);
   --soft-green: rgb(149, 218, 162);
+  --bg: hsl(200 20% 10%);
+  --text: hsl(0, 0%, 96%);
+  --border: #555;
+  --danger: hsl(0, 55%, 50%);
   color-scheme: dark;
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --darky: hsl(0, 0%, 99%);
+  --bg: hsl(200, 25%, 93%);
+  --text: hsl(200, 15%, 16%);
+  --border: hsl(200, 10%, 78%);
+  --danger: hsl(0, 60%, 48%);
+  color-scheme: light;
 }
 
 /* Header styling */
@@ -130,12 +149,17 @@ main header {
 
 main header .clear {
   border: none;
-  background-color: hsl(0, 55%, 50%);
+  background-color: var(--danger);
   font-weight: bold;
   border-radius: 20px;
   padding: 6px 10px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition: filter 150ms;
+}
+
+main header .clear:hover {
+  filter: brightness(1.15);
 }
 
 
@@ -162,7 +186,7 @@ main .task-list {
   margin-block-end: 10px;
   transition-duration: 300ms;
   transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.2);
-  border: 1px solid #555;
+  border: 1px solid var(--border);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -180,7 +204,7 @@ main .task-list {
   margin-top: 1px;
   flex-shrink: 0;
   cursor: pointer;
-  border: 2px solid #555;
+  border: 2px solid var(--border);
   border-radius: 6px;
   background-color: transparent;
   background-position: center;
@@ -215,8 +239,8 @@ main .task-list {
   border: none;
   background: none;
   cursor: pointer;
-  color: hsl(0, 55%, 50%);
-  transition: transform 150ms, color 150ms;
+  color: var(--danger);
+  transition: transform 150ms, color 150ms, filter 150ms;
 }
 
 .task .delete svg {
@@ -280,7 +304,7 @@ main .task-list {
   pointer-events: auto;
   cursor: pointer;
   background-color: var(--darky);
-  color: white;
+  color: var(--text);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
@@ -315,11 +339,11 @@ main .task-list {
 
 .modal {
   background-color: var(--darky);
-  border: 1px solid #555;
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 24px 30px;
   text-align: center;
-  color: white;
+  color: var(--text);
   font-family: sans-serif;
   min-width: 240px;
 }
@@ -345,14 +369,49 @@ main .task-list {
 }
 
 .modal .modal-yes {
-  background-color: hsl(0, 55%, 50%);
+  background-color: var(--danger);
   color: white;
 }
 
 .modal .modal-no {
-  background-color: #555;
+  background-color: var(--border);
   color: white;
 }
+
+/* Theme toggle (fixed top-right) */
+.theme-toggle {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 15;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 200ms, background-color 200ms, color 250ms;
+}
+
+.theme-toggle:hover {
+  background-color: hsla(0, 0%, 50%, 0.15);
+  transform: rotate(15deg) scale(1.08);
+}
+
+.theme-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Dark theme shows the sun (tap = go light), light theme shows the moon */
+.theme-toggle .icon-moon { display: none; }
+
+[data-theme="light"] .theme-toggle .icon-sun { display: none; }
+[data-theme="light"] .theme-toggle .icon-moon { display: block; }
 
 .count{
   color: red;
@@ -371,6 +430,10 @@ main .task-list {
 	<body>
 	  <!-- Header section with title and form for adding tasks -->
 	  <header class="box">
+	    <button type="button" class="theme-toggle" title="Toggle theme">
+	      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+	      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+	    </button>
 	    <h1>List<span>X</span>
 	    </h1>
 	    <form>
@@ -414,6 +477,21 @@ const taskCounter = document.querySelector('.task-counter');
 const modalOverlay = document.querySelector('.modal-overlay');
 const modalYes = document.querySelector('.modal-yes');
 const modalNo = document.querySelector('.modal-no');
+const themeToggle = document.querySelector('.theme-toggle');
+const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
+//# Theme: dark by default, the choice is saved in localStorage
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    themeColorMeta.setAttribute('content', theme === 'light' ? '#E9EFF2' : '#141B1F');
+}
+
+applyTheme(localStorage.getItem('theme') || 'dark');
+
+themeToggle.onclick = function () {
+    applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+};
 
 //# Copy helper (clipboard API with fallback)
 function copyText(text) {
