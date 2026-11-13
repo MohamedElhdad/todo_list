@@ -328,7 +328,17 @@ function createTasks(task) {
 clearAll.onclick = function () {
     if (document.querySelectorAll('.task').length > 0) {
         modalOverlay.classList.add('show');
-    }
+        // this.style.color = '#c63939';
+        // this.style.backgroundColor = 'white';
+        // this.style.outline = '1px solid #c63939';
+
+        // setTimeout(() => {
+        //     this.style.color = 'white';
+        //     this.style.backgroundColor = '#c63939';
+        // }, 140);
+    } 
+
+        
 }
 
 modalNo.onclick = function () {

@@ -1,5 +1,5 @@
 // ListX Service Worker - keeps the app working offline
-const CACHE_NAME = 'listx-v23';
+const CACHE_NAME = 'listx-v24';
 const ASSETS = [
   './',
   './index.html',
@@ -7,7 +7,10 @@ const ASSETS = [
   './css/style.css',
   './js/app.js',
   './imgs/icon-192.png',
-  './imgs/icon-512.png'
+  './imgs/icon-512.png',
+  './fonts/vazirmatn-arabic-var.woff2',
+  './fonts/vazirmatn-latin-var.woff2',
+  './fonts/vazirmatn-latin-ext-var.woff2'
 ];
 
 // Install: cache everything the app needs. Files are fetched with
