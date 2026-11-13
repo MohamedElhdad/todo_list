@@ -274,15 +274,18 @@ main .task-list {
   transform: translateX(-50%) translateY(0);
 }
 
-/* Undo variant: dark snackbar with a green action (Android style) */
+/* Undo variant: dark snackbar with a green action (Android style).
+   The whole snackbar is tappable to undo. */
 .toast.undo {
+  pointer-events: auto;
+  cursor: pointer;
   background-color: var(--darky);
   color: white;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .toast-action {
-  pointer-events: auto;
+  pointer-events: none; /* the toast itself handles the tap */
   margin-left: 16px;
   border: none;
   background: none;
@@ -443,11 +446,14 @@ function showToast(msg, actionLabel, onAction) {
         const actionBtn = document.createElement('button');
         actionBtn.className = 'toast-action';
         actionBtn.textContent = actionLabel;
-        actionBtn.onclick = function () {
+        toast.append(actionBtn);
+        // Tapping the whole toast performs the undo
+        toast.onclick = function () {
             hideToast();
             if (onAction) onAction();
         };
-        toast.append(actionBtn);
+    } else {
+        toast.onclick = null;
     }
 
     toast.classList.add('show');
