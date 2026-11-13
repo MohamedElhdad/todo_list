@@ -57,10 +57,10 @@ body {
   font-family: var(--font);
 }
 
-/* Lighter task + input text (weight 400) */
+/* Slightly heavier task + input text (weight 500) */
 .task-content,
 form .task-input {
-  font-weight: 400;
+  font-weight: 500;
 }
 
 /* CSS Variables for reusable colors */
@@ -72,7 +72,7 @@ form .task-input {
   --border: #555;
   --danger: hsl(0, 55%, 50%);
   --shadow: none;
-  --font: 'Tajawal', sans-serif;
+  --font: 'Tajawal', 'Inter', 'SF Pro Text', 'Segoe UI', system-ui, 'Roboto', 'Helvetica Neue', sans-serif;
   color-scheme: dark;
 }
 
