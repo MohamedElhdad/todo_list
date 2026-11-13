@@ -12,6 +12,43 @@
 	    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
 	  </script>
 	  <style>
+		/* Self-hosted fonts: Poppins (Latin) + Tajawal (Arabic) */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/poppins-400-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/poppins-700-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('fonts/tajawal-500-arabic.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/tajawal-700-arabic.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
 		/* Global styles for all  elements */
 * {
   list-style-type: none;
@@ -49,7 +86,14 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-family: sans-serif;
+  font-family: var(--font);
+}
+
+/* Slightly heavier Arabic text: Tajawal 500 for tasks and input,
+   while Latin stays on Poppins 400 (weight 500 falls back to 400) */
+.task-content,
+form .task-input {
+  font-weight: 500;
 }
 
 /* CSS Variables for reusable colors */
@@ -61,6 +105,7 @@ body {
   --border: #555;
   --danger: hsl(0, 55%, 50%);
   --shadow: none;
+  --font: 'Poppins', 'Tajawal', sans-serif;
   color-scheme: dark;
 }
 
@@ -112,6 +157,8 @@ form input {
   outline: 0;
   font-size: 20px;
   flex: 1;
+  font-family: inherit;
+  min-width: 0;
 }
 
 form .task-input {
@@ -136,6 +183,7 @@ form .add {
   font-size: 24px;
   transition-duration: 200ms;
   -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
 }
 
 
@@ -158,6 +206,7 @@ main header .clear {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: filter 150ms;
+  font-family: inherit;
 }
 
 main header .clear:hover {
@@ -287,7 +336,7 @@ main .task-list {
   color: hsl(200 20% 10%);
   padding: 10px 22px;
   border-radius: 30px;
-  font-family: sans-serif;
+  font-family: var(--font);
   font-weight: bold;
   font-size: 14px;
   opacity: 0;
@@ -318,7 +367,7 @@ main .task-list {
   background: none;
   padding: 0;
   color: var(--soft-green);
-  font-family: sans-serif;
+  font-family: inherit;
   font-weight: bold;
   letter-spacing: 1px;
   font-size: 14px;
@@ -347,7 +396,7 @@ main .task-list {
   padding: 24px 30px;
   text-align: center;
   color: var(--text);
-  font-family: sans-serif;
+  font-family: var(--font);
   min-width: 240px;
 }
 
@@ -369,6 +418,7 @@ main .task-list {
   font-weight: bold;
   font-size: 15px;
   cursor: pointer;
+  font-family: inherit;
 }
 
 .modal .modal-yes {

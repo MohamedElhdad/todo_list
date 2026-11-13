@@ -1,11 +1,15 @@
 // ListX Service Worker - keeps the app working offline
-const CACHE_NAME = 'listx-v16';
+const CACHE_NAME = 'listx-v18';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './fonts/poppins-400-latin.woff2',
+  './fonts/poppins-700-latin.woff2',
+  './fonts/tajawal-500-arabic.woff2',
+  './fonts/tajawal-700-arabic.woff2'
 ];
 
 // Install: cache everything the app needs

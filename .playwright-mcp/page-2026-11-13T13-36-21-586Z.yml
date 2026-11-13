@@ -1,0 +1,13 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - button "Toggle theme" [ref=e3] [cursor=pointer]
+    - heading "ListX" [level=1] [ref=e7]
+    - generic [ref=e8]:
+      - textbox "Write a new Task." [ref=e9]
+      - button "+" [ref=e10] [cursor=pointer]
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - paragraph [ref=e13]: You have 0 tasks
+      - button "Clear" [ref=e14] [cursor=pointer]
+    - list [ref=e15]:
+      - generic [ref=e16]: No tasks
