@@ -24,7 +24,8 @@ body {
   background-color: hsl(200 20% 10%);
   overflow-x: hidden;
   overflow-y: scroll;
-
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 ::-webkit-scrollbar {
@@ -95,6 +96,8 @@ form input {
 form .task-input {
   background-color: transparent;
   flex-shrink: 0;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 form:has(.task-input:focus-visible) {
@@ -181,10 +184,36 @@ main .task-list {
   touch-action: manipulation;
 }
 
-/* Long-press copy: green highlight shows while you're selecting text */
-.task-content::selection {
+/* Fake highlight shown by our own long-press copy */
+.copying {
   background-color: var(--soft-green);
   color: var(--darky);
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px var(--soft-green);
+}
+
+/* Toast notification (like native Android) */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background-color: var(--soft-green);
+  color: hsl(200 20% 10%);
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms, transform 200ms;
+  z-index: 10;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .count{
@@ -250,6 +279,41 @@ const clearAll = document.querySelector('.clear');
 const tasksDiv = document.querySelector('.task-list');
 const empty = document.querySelector('.empty');
 const taskCounter = document.querySelector('.task-counter');
+
+//# Copy helper (clipboard API with fallback)
+function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.append(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    return Promise.resolve();
+}
+
+//# Toast helper (native-like notification)
+function showToast(msg) {
+    let toast = document.querySelector('.toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'toast';
+        document.body.append(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1500);
+}
+
+//# Kill the native long-press copy menu on task text only
+//# (our own highlight + copy replaces it — long-press elsewhere stays normal)
+document.addEventListener('contextmenu', function (e) {
+    if (e.target.closest && e.target.closest('.task-content')) {
+        e.preventDefault();
+    }
+});
 
 
 
@@ -359,12 +423,39 @@ function createTasks(task) {
 
     p.ondblclick = toggleLine;
 
-    //# Mobile: detect double-TAP ourselves, so the browser never
-    // opens the copy/paste toolbar on it. Long-press copy stays intact.
+    //# Mobile: custom long-press (copy) + double-tap (strike)
     let lastTap = 0;
+    let pressTimer = null;
+    let justCopied = false;
+
+    const copyTask = function () {
+        const pValue = p.firstChild.nodeValue.trim();
+        copyText(pValue).catch(() => {});
+        p.classList.add('copying');
+        setTimeout(() => p.classList.remove('copying'), 400);
+        showToast('Copied!');
+        justCopied = true;
+    };
+
+    p.addEventListener('touchstart', function () {
+        pressTimer = setTimeout(copyTask, 450);
+    }, { passive: true });
+
+    const cancelPress = function () { clearTimeout(pressTimer); };
+    p.addEventListener('touchmove', cancelPress, { passive: true });
+    p.addEventListener('touchcancel', cancelPress, { passive: true });
+    p.addEventListener('touchend', cancelPress, { passive: true });
+
     div.addEventListener('touchend', function (e) {
 
         if (e.target.classList.contains('state')) return;
+
+        // Ignore the tap that follows a long-press copy
+        if (justCopied) {
+            justCopied = false;
+            lastTap = 0;
+            return;
+        }
 
         const now = Date.now();
         if (now - lastTap <= 300) {
