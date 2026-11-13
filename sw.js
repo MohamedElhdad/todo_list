@@ -1,5 +1,5 @@
 // ListX Service Worker - keeps the app working offline
-const CACHE_NAME = 'listx-v21';
+const CACHE_NAME = 'listx-v22';
 const ASSETS = [
   './',
   './index.html',
@@ -10,11 +10,23 @@ const ASSETS = [
   './imgs/icon-512.png'
 ];
 
-// Install: cache everything the app needs
+// Install: cache everything the app needs. Files are fetched with
+// cache:'reload' so a fresh SW always pulls the newest assets from the
+// network instead of a stale HTTP cache.
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(
+        ASSETS.map((asset) =>
+          fetch(new Request(asset, { cache: 'reload' })).then((response) => {
+            if (!response.ok) {
+              throw new Error('Failed to cache asset: ' + asset);
+            }
+            return cache.put(asset, response);
+          })
+        )
+      )
+    ).then(() => self.skipWaiting())
   );
 });
 
