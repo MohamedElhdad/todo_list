@@ -159,6 +159,7 @@ main .task-list {
   transition-duration: 300ms;
   transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.2);
   border: 1px solid #555;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .task.done {
@@ -176,11 +177,8 @@ main .task-list {
 .task-content {
   line-height: 1.5;
   word-break: break-all;
-}
-
-.task-content::selection {
-  background-color: var(--soft-green);
-  color: var(--darky);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .count{
@@ -330,8 +328,9 @@ function createTasks(task) {
    const p = div.lastElementChild;
 
     //# Line-Through Task
-    p.ondblclick = function () {  
+    p.ondblclick = function () {
 
+        window.getSelection().removeAllRanges();
         const pValue = this.firstChild.nodeValue.trim()
         
         let lineArr = JSON.parse(localStorage.getItem('line')) || []; 
