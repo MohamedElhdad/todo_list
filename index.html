@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	  <meta charset="UTF-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  <!-- <link rel="shortcut icon" href="icon.png" type="image/x-icon"> -->
+	  <title>Todo-List</title>
+	  <style>
+		/* Global styles for all elements */
+* {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* Body styling */
+body {
+  min-height: 100vh;
+  background-color: hsl(200 20% 10%);
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+::-webkit-scrollbar {
+  appearance: none;
+  background-color: transparent;
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--darky);
+  border-radius: 4px;
+}
+
+/* Flexbox container class */
+.box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: sans-serif;
+}
+
+/* CSS Variables for reusable colors */
+:root {
+  --darky: hsl(200, 5%, 20%);
+  --soft-green: rgb(149, 218, 162);
+  color-scheme: dark;
+}
+
+/* Header styling */
+header {
+  padding-block: 30px;
+  gap: 10px;
+}
+
+header h1 {
+  font-family: 'Brush Script MT', 'Segoe Script', cursive;
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: 2px;
+
+  >span {
+    color: var(--soft-green);
+  }
+}
+
+/* Form styling */
+form {
+  background-color: var(--darky);
+  padding: 6px;
+  border-radius: 50px;
+  transition-duration: 200ms;
+  min-width: min(80vw, 400px);
+  display: flex;
+  justify-content: space-between;
+}
+
+form input {
+  border: none;
+  padding: 6px 12px;
+  outline: 0;
+  font-size: 20px;
+  flex: 1;
+}
+
+form .task-input {
+  background-color: transparent;
+  flex-shrink: 0;
+}
+
+form:has(.task-input:focus-visible) {
+  box-shadow: 0 0 0 4px #555;
+}
+
+form .add {
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  transition-duration: 200ms;
+}
+
+form .add:hover {
+  background-color: var(--soft-green);
+  color: black;
+}
+
+/* Main section styling */
+main header {
+  padding: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: min(680px, 90vw);
+}
+
+
+main header .clear {
+  border: none;
+  background-color: hsl(0, 55%, 50%);
+  font-weight: bold;
+  border-radius: 20px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+main header .clear:hover {
+  background-color: hsl(0, 60%, 70%);
+}
+
+main .task-list {
+  padding: 10px;
+  width: min(700px, 90vw);
+  will-change: contents;
+}
+
+.task-list div.empty {
+  color: gray;
+  text-align: center;
+  margin-block: 20px;
+}
+
+/* Task object styling */
+.task {
+  background-color: var(--darky);
+  display: flex;
+  align-items: start;
+  padding: 20px;
+  gap: 10px;
+  border-radius: 10px;
+  margin-block-end: 10px;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.2);
+  border: 1px solid #555;
+}
+
+.task.done {
+  opacity: 0;
+  transform: translateY(-40px) scale(.5);
+}
+
+.task .state {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.task-content {
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.task-content::selection {
+  background-color: var(--soft-green);
+  color: var(--darky);
+}
+
+
+.line {
+  text-decoration: line-through;
+  color: red;
+}
+	  </style>
+	</head>
+	
+	<body>
+	  <!-- Header section with title and form for adding tasks -->
+	  <header class="box">
+	    <h1>List<span>X</span>
+	    </h1>
+	    <form>
+	      <input type="text" class="task-input" placeholder="Write a new Task.">
+	      <button type="button" title="Add" class="add">+</button>
+	    </form>
+	  </header>
+	
+	  <!-- Main section with task counter and task list -->
+	  <main class="box">
+	    <header>
+	      <p class="task-counter">You have 0 tasks</p>
+	      <button class="clear">Clear</button>
+	    </header>
+	    <ul class="task-list">
+	      <!-- Placeholder text when no tasks are present -->
+	      <div class="empty">
+	        No tasks
+	      </div>
+	    </ul>
+	  </main>
+	  <script defer>
+		
+const taskInput = document.querySelector('.task-input');
+const addBtn = document.querySelector('.add');
+const clearAll = document.querySelector('.clear');
+const tasksDiv = document.querySelector('.task-list');
+const empty = document.querySelector('.empty');
+const taskCounter = document.querySelector('.task-counter');
+
+
+
+if (sessionStorage.getItem('task-input')) {
+    
+    taskInput.value = sessionStorage.getItem('task-input');
+}
+
+taskInput.oninput = function () {
+    
+    sessionStorage.setItem('task-input', this.value);
+}
+
+
+addBtn.onclick = function () {
+    
+    if (taskInput.value !== '') {
+        
+        createTasks(taskInput.value);
+        sessionStorage.setItem('task-input', '');
+        taskInput.value = '';
+        taskInput.focus();
+    }
+}
+
+
+
+
+if (localStorage.getItem('tasks')) {
+    
+    const tasksArr = JSON.parse(localStorage.getItem('tasks'));
+    
+    for (const task of tasksArr) {
+        
+        createTasks(task);
+    }
+}
+
+
+
+function createTasks(task) {
+    
+    const div = document.createElement('div');
+    div.className = 'task';
+    div.innerHTML = ` <p class="task-content">${task}</p>`;
+    const deleteInput = document.createElement('input');
+    deleteInput.type = 'checkbox';
+    deleteInput.className = 'state';
+    empty.setAttribute('hidden', '');
+    div.prepend(deleteInput);
+    tasksDiv.append(div);
+
+
+    localStorageUpdate();
+
+    //<!--# Delete Task
+    deleteInput.onclick = function () {
+        setTimeout(() => {
+            this.parentElement.remove();
+            localStorageUpdate();
+        }, 100);
+
+        if (localStorage.getItem('line')) {
+            
+            localStorage.setItem('line', JSON.stringify(JSON.parse(localStorage.getItem('line')).filter(e => e != div.lastElementChild.firstChild.nodeValue.trim())));
+        }
+    };
+
+
+    const p = div.lastElementChild;
+    
+    //<!--# Line-Through Task
+    p.ondblclick = function () {  
+
+        const pValue = this.firstChild.nodeValue.trim();
+
+        let lineArr = JSON.parse(localStorage.getItem('line')) || []; 
+ 
+        if (this.classList.contains('line')) {
+
+            lineArr = lineArr.filter(e => e != pValue);
+            this.classList.remove('line');
+            
+        } else {
+            
+            lineArr.push(pValue);
+            this.classList.add('line');
+        }
+
+        localStorage.setItem('line', JSON.stringify(lineArr));
+        
+        localStorageUpdate()
+    }
+}
+
+
+
+
+//<!--! clear All Button
+clearAll.onclick = function () {
+
+    if (localStorage.getItem('line')) {
+        
+        localStorage.setItem('line', '[]');
+    }
+
+    tasksDiv.querySelectorAll('.task').forEach(e => {
+        e.remove();
+    });
+    localStorageUpdate();
+}
+
+
+//<!--! Add Line-Through To Task If In localStorage.getItem('line');
+if (localStorage.getItem('line')) {
+    
+    tasksDiv.querySelectorAll('.task').forEach(task => {
+            
+        if (JSON.parse(localStorage.getItem('line')).includes(task.lastElementChild.firstChild.nodeValue.trim())) {
+                    
+            task.lastElementChild.classList.add('line'); 
+        } else { 
+            task.lastElementChild.classList.remove('line');
+        }
+    });
+}
+
+
+
+//<!--! localStorage Update
+function localStorageUpdate() {
+
+    const tasksArr = [];
+
+    document.querySelectorAll('.task').forEach(e => {
+        tasksArr.push(e.lastElementChild.firstChild.nodeValue.trim());
+    });
+
+    localStorage.setItem('tasks', JSON.stringify(tasksArr));
+
+    let lineLength = 0;
+    if (localStorage.getItem('line')) {
+
+        lineLength = JSON.parse(localStorage.getItem('line')).length ;
+    }
+    taskCounter.innerHTML = `You have ${JSON.parse(localStorage.getItem('tasks')).length - lineLength} tasks`;
+    
+    tasksDiv.querySelectorAll('.task').length == 0 ? empty.removeAttribute('hidden') : empty.setAttribute('hidden', '');
+}
+
+	  </script>
+	</body>
+</html>
