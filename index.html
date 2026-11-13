@@ -5,9 +5,11 @@
 	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	  <!-- <link rel="shortcut icon" href="icon.png" type="image/x-icon"> -->
 	  <link rel="stylesheet" href="main.css" type="text/css">
-	  <title>AutoDo</title>
+	  <link rel="manifest" href="manifest.json">
+	  <meta name="theme-color" content="#141B1F">
+	  <title>Todo-List</title>
 	  <style>
-		/* Global styles for all elements */
+		/* Global styles for all  elements */
 * {
   list-style-type: none;
   padding: 0;
@@ -427,6 +429,15 @@ function localStorageUpdate() {
 
 }
 
+	  </script>
+
+	  <!-- Register the Service Worker (makes the app installable & offline) -->
+	  <script>
+	    if ('serviceWorker' in navigator) {
+	      window.addEventListener('load', () => {
+	        navigator.serviceWorker.register('./sw.js');
+	      });
+	    }
 	  </script>
 	</body>
 </html>
