@@ -4,7 +4,8 @@
 	  <meta charset="UTF-8">
 	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	  <!-- <link rel="shortcut icon" href="icon.png" type="image/x-icon"> -->
-	  <title>Todo-List</title>
+	  <link rel="stylesheet" href="main.css" type="text/css">
+	  <title>AutoDo</title>
 	  <style>
 		/* Global styles for all elements */
 * {
@@ -20,6 +21,7 @@ body {
   background-color: hsl(200 20% 10%);
   overflow-x: hidden;
   overflow-y: scroll;
+
 }
 
 ::-webkit-scrollbar {
@@ -50,18 +52,21 @@ body {
 
 /* Header styling */
 header {
-  padding-block: 30px;
-  gap: 10px;
+  padding-block: 10px;
+  gap: 15px;
 }
 
 header h1 {
-  font-family: 'Brush Script MT', 'Segoe Script', cursive;
-  font-size: 56px;
-  font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
+  font-weight: 900;
+  font-family: cursive;
+  font-size: 45px;
 
   >span {
     color: var(--soft-green);
+    font-size: 55px;
+
+    
   }
 }
 
@@ -94,6 +99,8 @@ form:has(.task-input:focus-visible) {
 }
 
 form .add {
+  background-color: dimgray;
+  color: white;
   cursor: pointer;
   width: 40px;
   height: 40px;
@@ -101,12 +108,9 @@ form .add {
   border-radius: 50%;
   font-size: 24px;
   transition-duration: 200ms;
+  -webkit-tap-highlight-color: transparent;
 }
 
-form .add:hover {
-  background-color: var(--soft-green);
-  color: black;
-}
 
 /* Main section styling */
 main header {
@@ -125,11 +129,9 @@ main header .clear {
   border-radius: 20px;
   padding: 6px 10px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-main header .clear:hover {
-  background-color: hsl(0, 60%, 70%);
-}
 
 main .task-list {
   padding: 10px;
@@ -148,7 +150,7 @@ main .task-list {
   background-color: var(--darky);
   display: flex;
   align-items: start;
-  padding: 20px;
+  padding: 12px;
   gap: 10px;
   border-radius: 10px;
   margin-block-end: 10px;
@@ -179,11 +181,34 @@ main .task-list {
   color: var(--darky);
 }
 
-
-.line {
-  text-decoration: line-through;
+.count{
   color: red;
 }
+
+@keyframes line{
+  0%   { width : 0; }
+  100% { width: 100%; }
+}
+.line {
+  position: relative;
+}
+.line::after {
+  content: ' ';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background: red;
+  animation-name: line;
+  animation-duration: 0.2s;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards; 
+  opacity: 0.7
+}
+
+
 	  </style>
 	</head>
 	
@@ -201,7 +226,7 @@ main .task-list {
 	  <!-- Main section with task counter and task list -->
 	  <main class="box">
 	    <header>
-	      <p class="task-counter">You have 0 tasks</p>
+	      <p class="task-counter">You have <span class="count">0</span> tasks</p>
 	      <button class="clear">Clear</button>
 	    </header>
 	    <ul class="task-list">
@@ -211,7 +236,7 @@ main .task-list {
 	      </div>
 	    </ul>
 	  </main>
-	  <script defer>
+	  <script>
 		
 const taskInput = document.querySelector('.task-input');
 const addBtn = document.querySelector('.add');
@@ -236,11 +261,21 @@ taskInput.oninput = function () {
 addBtn.onclick = function () {
     
     if (taskInput.value !== '') {
+      
+      this.style.color = 'black';
+      this.style.backgroundColor = 'var(--soft-green)';
+      
+      setTimeout(() => {
+        this.style.color = 'white';
+        this.style.backgroundColor = 'dimgray';
+      }, 130);
         
-        createTasks(taskInput.value);
-        sessionStorage.setItem('task-input', '');
-        taskInput.value = '';
-        taskInput.focus();
+      createTasks(taskInput.value);
+
+      sessionStorage.setItem('task-input', '');
+      
+      taskInput.value = '';
+      taskInput.focus();  
     }
 }
 
@@ -274,27 +309,29 @@ function createTasks(task) {
 
     localStorageUpdate();
 
-    //<!--# Delete Task
+    //# Delete Task
     deleteInput.onclick = function () {
-        setTimeout(() => {
-            this.parentElement.remove();
-            localStorageUpdate();
-        }, 100);
+      
+      this.parentElement.classList.add('done');
+        
+      setTimeout(() => {
+          this.parentElement.remove();
+          localStorageUpdate();
+      }, 120);
 
-        if (localStorage.getItem('line')) {
+      if (localStorage.getItem('line')) {
             
-            localStorage.setItem('line', JSON.stringify(JSON.parse(localStorage.getItem('line')).filter(e => e != div.lastElementChild.firstChild.nodeValue.trim())));
+          localStorage.setItem('line', JSON.stringify(JSON.parse(localStorage.getItem('line')).filter(e => e != div.lastElementChild.firstChild.nodeValue.trim())));
         }
     };
 
+   const p = div.lastElementChild;
 
-    const p = div.lastElementChild;
-    
-    //<!--# Line-Through Task
+    //# Line-Through Task
     p.ondblclick = function () {  
 
-        const pValue = this.firstChild.nodeValue.trim();
-
+        const pValue = this.firstChild.nodeValue.trim()
+        
         let lineArr = JSON.parse(localStorage.getItem('line')) || []; 
  
         if (this.classList.contains('line')) {
@@ -317,22 +354,39 @@ function createTasks(task) {
 
 
 
-//<!--! clear All Button
+//! clear All Button
 clearAll.onclick = function () {
+  
+  if(JSON.parse(localStorage.getItem('tasks')).length > 0) {
+    
+    clearAll.style.color = 'hsl(0, 55%, 50%)';
+    clearAll.style.backgroundColor = 'white';
+  
+    setTimeout(() => {
+      clearAll.style.color = 'white';
+      clearAll.style.backgroundColor = 'hsl(0, 55%, 50%)';
+    }, 130);
+  }
 
     if (localStorage.getItem('line')) {
         
-        localStorage.setItem('line', '[]');
+      localStorage.setItem('line', '[]');
     }
 
-    tasksDiv.querySelectorAll('.task').forEach(e => {
-        e.remove();
+    tasksDiv.querySelectorAll('.task').forEach((task, i) => {
+        task.classList.add('done');
+        task.style.transitionDelay = (20 * i) + 'ms';
+       
+        setTimeout(() => {
+          task.remove();
+          localStorageUpdate();
+        },130);
     });
-    localStorageUpdate();
+    
 }
 
 
-//<!--! Add Line-Through To Task If In localStorage.getItem('line');
+//! Add Line-Through To Task If In localStorage.getItem('line');
 if (localStorage.getItem('line')) {
     
     tasksDiv.querySelectorAll('.task').forEach(task => {
@@ -348,7 +402,7 @@ if (localStorage.getItem('line')) {
 
 
 
-//<!--! localStorage Update
+//! localStorage Update
 function localStorageUpdate() {
 
     const tasksArr = [];
@@ -364,9 +418,13 @@ function localStorageUpdate() {
 
         lineLength = JSON.parse(localStorage.getItem('line')).length ;
     }
-    taskCounter.innerHTML = `You have ${JSON.parse(localStorage.getItem('tasks')).length - lineLength} tasks`;
     
-    tasksDiv.querySelectorAll('.task').length == 0 ? empty.removeAttribute('hidden') : empty.setAttribute('hidden', '');
+    taskCounter.innerHTML = `You have <span class='count'>${JSON.parse(localStorage.getItem('tasks')).length - lineLength}</span> tasks`;
+    
+    setTimeout(() => {
+       tasksDiv.querySelectorAll('.task').length == 0 ? empty.removeAttribute('hidden') : empty.setAttribute('hidden', '');
+    },130);
+
 }
 
 	  </script>
