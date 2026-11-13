@@ -58,6 +58,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Kill Chrome Android font boosting: the phone must render exactly
+   like desktop (system font scale won't inflate page text) */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 /* Body styling */
 body {
   min-height: 100vh;
@@ -146,7 +153,8 @@ form {
   padding: 6px;
   border-radius: 50px;
   transition-duration: 200ms;
-  min-width: min(80vw, 400px);
+  /* Hard cap: can never exceed the screen, and matches the task cards' width */
+  width: min(400px, 90vw);
   display: flex;
   justify-content: space-between;
 }
@@ -163,7 +171,6 @@ form input {
 
 form .task-input {
   background-color: transparent;
-  flex-shrink: 0;
   user-select: text;
   -webkit-user-select: text;
 }
