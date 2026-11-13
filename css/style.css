@@ -66,10 +66,10 @@ body {
   font-family: var(--font);
 }
 
-/* Slightly heavier Arabic text (Vazirmatn 600) for tasks and the input */
+/* Lighter Arabic text (Vazirmatn 400) for tasks and the input */
 .task-content,
 form .task-input {
-  font-weight: 600;
+  font-weight: 400;
 }
 
 /* CSS Variables for reusable colors */
