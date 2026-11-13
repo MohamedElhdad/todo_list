@@ -1,5 +1,5 @@
 // ListX Service Worker - keeps the app working offline
-const CACHE_NAME = 'listx-v30';
+const CACHE_NAME = 'listx-v31';
 const ASSETS = [
   './',
   './index.html',

@@ -297,7 +297,8 @@ main .task-list {
 
 .task-content {
   line-height: 1.5;
-  word-break: break-all;
+  overflow-wrap: break-word;
+  word-break: normal;
   touch-action: manipulation;
   /* Native strikethrough, hidden until the task is struck (.line) */
   text-decoration: line-through;
