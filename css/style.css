@@ -133,7 +133,7 @@ form input {
   border: none;
   padding: 6px 12px;
   outline: 0;
-  font-size: 17px;
+  font-size: 20px;
   flex: 1;
 }
 
@@ -175,10 +175,6 @@ main header {
   justify-content: space-between;
   align-items: center;
   width: min(680px, 90vw);
-}
-
-main header .task-counter {
-  font-size: 15px;
 }
 
 
@@ -292,7 +288,6 @@ main .task-list {
 
 .task-content {
   line-height: 1.5;
-  font-size: 15px;
   word-break: break-all;
   touch-action: manipulation;
   /* Native strikethrough, hidden until the task is struck (.line) */
