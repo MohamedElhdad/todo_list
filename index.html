@@ -178,6 +178,33 @@ main .task-list {
   cursor: pointer;
 }
 
+/* Trash delete button */
+.task .delete {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: hsl(0, 55%, 50%);
+  transition: transform 150ms, color 150ms;
+}
+
+.task .delete svg {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.task .delete:hover {
+  color: hsl(0, 70%, 60%);
+  transform: scale(1.15);
+}
+
 .task-content {
   line-height: 1.5;
   word-break: break-all;
@@ -391,11 +418,32 @@ function createTasks(task) {
 
       if (localStorage.getItem('line')) {
             
-          localStorage.setItem('line', JSON.stringify(JSON.parse(localStorage.getItem('line')).filter(e => e != div.lastElementChild.firstChild.nodeValue.trim())));
+          localStorage.setItem('line', JSON.stringify(JSON.parse(localStorage.getItem('line')).filter(e => e != div.children[1].firstChild.nodeValue.trim())));
         }
     };
 
-   const p = div.lastElementChild;
+    //# Trash delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete';
+    deleteBtn.title = 'Delete';
+    deleteBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
+    div.append(deleteBtn);
+
+    deleteBtn.onclick = function () {
+
+        div.classList.add('done');
+
+        setTimeout(() => {
+            div.remove();
+            localStorageUpdate();
+        }, 120);
+
+        if (localStorage.getItem('line')) {
+            localStorage.setItem('line', JSON.stringify(JSON.parse(localStorage.getItem('line')).filter(e => e != div.children[1].firstChild.nodeValue.trim())));
+        }
+    };
+
+   const p = div.children[1];
 
     //# Line-Through Task (shared by double-click on desktop and double-tap on mobile)
     const toggleLine = function () {
@@ -448,7 +496,7 @@ function createTasks(task) {
 
     div.addEventListener('touchend', function (e) {
 
-        if (e.target.classList.contains('state')) return;
+        if (e.target.classList.contains('state') || (e.target.closest && e.target.closest('.delete'))) return;
 
         // Ignore the tap that follows a long-press copy
         if (justCopied) {
@@ -508,11 +556,11 @@ if (localStorage.getItem('line')) {
     
     tasksDiv.querySelectorAll('.task').forEach(task => {
             
-        if (JSON.parse(localStorage.getItem('line')).includes(task.lastElementChild.firstChild.nodeValue.trim())) {
+        if (JSON.parse(localStorage.getItem('line')).includes(task.children[1].firstChild.nodeValue.trim())) {
                     
-            task.lastElementChild.classList.add('line'); 
+            task.children[1].classList.add('line'); 
         } else { 
-            task.lastElementChild.classList.remove('line');
+            task.children[1].classList.remove('line');
         }
     });
 }
@@ -525,7 +573,7 @@ function localStorageUpdate() {
     const tasksArr = [];
 
     document.querySelectorAll('.task').forEach(e => {
-        tasksArr.push(e.lastElementChild.firstChild.nodeValue.trim());
+        tasksArr.push(e.children[1].firstChild.nodeValue.trim());
     });
 
     localStorage.setItem('tasks', JSON.stringify(tasksArr));
