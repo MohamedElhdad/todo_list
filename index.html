@@ -406,22 +406,6 @@ function createTasks(task) {
 
     localStorageUpdate();
 
-    //# Delete Task
-    deleteInput.onclick = function () {
-      
-      this.parentElement.classList.add('done');
-        
-      setTimeout(() => {
-          this.parentElement.remove();
-          localStorageUpdate();
-      }, 120);
-
-      if (localStorage.getItem('line')) {
-            
-          localStorage.setItem('line', JSON.stringify(JSON.parse(localStorage.getItem('line')).filter(e => e != div.children[1].firstChild.nodeValue.trim())));
-        }
-    };
-
     //# Trash delete button
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete';
@@ -466,10 +450,19 @@ function createTasks(task) {
 
         localStorage.setItem('line', JSON.stringify(lineArr));
 
+        // Keep the checkbox in sync with the strike state
+        const checkbox = this.parentElement.children[0];
+        checkbox.checked = this.classList.contains('line');
+
         localStorageUpdate()
     }
 
     p.ondblclick = toggleLine;
+
+    //# Checkbox behaves like double-click: strike (done), never delete
+    deleteInput.onclick = function () {
+        toggleLine.call(p);
+    };
 
     //# Mobile: custom long-press (copy) + double-tap (strike)
     let lastTap = 0;
@@ -558,7 +551,8 @@ if (localStorage.getItem('line')) {
             
         if (JSON.parse(localStorage.getItem('line')).includes(task.children[1].firstChild.nodeValue.trim())) {
                     
-            task.children[1].classList.add('line'); 
+            task.children[1].classList.add('line');
+            task.children[0].checked = true; 
         } else { 
             task.children[1].classList.remove('line');
         }
