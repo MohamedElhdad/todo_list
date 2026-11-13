@@ -300,11 +300,15 @@ main .task-list {
   overflow-wrap: break-word;
   word-break: normal;
   touch-action: manipulation;
-  /* Native strikethrough, hidden until the task is struck (.line) */
-  text-decoration: line-through;
-  text-decoration-color: transparent;
-  text-decoration-thickness: 1.5px;
-  transition: text-decoration-color 0.2s ease;
+}
+
+/* Unified self-drawn strike: identical position on every device/font
+   (Android Chrome renders native line-through too high for Arabic) */
+.line {
+  background-image: linear-gradient(transparent calc(50% - 1.5px), rgba(255, 0, 0, 0.8) calc(50% - 1.5px), rgba(255, 0, 0, 0.8) calc(50% + 1.5px), transparent calc(50% + 1.5px));
+  background-repeat: repeat-y;
+  background-position: 0 50%;
+  background-size: 100% 100%;
 }
 
 /* Fake highlight shown by our own long-press copy */
@@ -459,10 +463,6 @@ main .task-list {
   color: red;
 }
 
-/* Strike: native line-through fades in red â€” always centered on the
-   glyphs and only as wide as the text itself, on every line. */
-.line {
-  text-decoration-color: rgba(255, 0, 0, 0.8);
-}
+
 
 
