@@ -15,6 +15,7 @@
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Body styling */
@@ -179,10 +180,10 @@ main .task-list {
   word-break: break-all;
 }
 
-/* Double-click selects the word for a split second; keep it invisible but copyable */
+/* Long-press copy: green highlight shows while you're selecting text */
 .task-content::selection {
-  background-color: transparent;
-  color: inherit;
+  background-color: var(--soft-green);
+  color: var(--darky);
 }
 
 .count{
