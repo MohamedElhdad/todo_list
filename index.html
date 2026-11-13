@@ -273,6 +273,83 @@ main .task-list {
   transform: translateX(-50%) translateY(0);
 }
 
+/* Undo variant: dark snackbar with a green action (Android style) */
+.toast.undo {
+  background-color: var(--darky);
+  color: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.toast-action {
+  pointer-events: auto;
+  margin-left: 16px;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--soft-green);
+  font-family: sans-serif;
+  font-weight: bold;
+  letter-spacing: 1px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Clear-all confirmation popup */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal {
+  background-color: var(--darky);
+  border: 1px solid #555;
+  border-radius: 16px;
+  padding: 24px 30px;
+  text-align: center;
+  color: white;
+  font-family: sans-serif;
+  min-width: 240px;
+}
+
+.modal p {
+  font-size: 17px;
+  margin-block-end: 18px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal button {
+  border: none;
+  border-radius: 20px;
+  padding: 8px 26px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.modal .modal-yes {
+  background-color: hsl(0, 55%, 50%);
+  color: white;
+}
+
+.modal .modal-no {
+  background-color: #555;
+  color: white;
+}
+
 .count{
   color: red;
 }
@@ -311,6 +388,17 @@ main .task-list {
 	      </div>
 	    </ul>
 	  </main>
+
+	  <!-- Clear-all confirmation popup -->
+	  <div class="modal-overlay">
+	    <div class="modal">
+	      <p>Clear all tasks?</p>
+	      <div class="modal-buttons">
+	        <button class="modal-yes">Yes</button>
+	        <button class="modal-no">No</button>
+	      </div>
+	    </div>
+	  </div>
 	  <script>
 		
 const taskInput = document.querySelector('.task-input');
@@ -319,6 +407,9 @@ const clearAll = document.querySelector('.clear');
 const tasksDiv = document.querySelector('.task-list');
 const empty = document.querySelector('.empty');
 const taskCounter = document.querySelector('.task-counter');
+const modalOverlay = document.querySelector('.modal-overlay');
+const modalYes = document.querySelector('.modal-yes');
+const modalNo = document.querySelector('.modal-no');
 
 //# Copy helper (clipboard API with fallback)
 function copyText(text) {
@@ -334,17 +425,85 @@ function copyText(text) {
     return Promise.resolve();
 }
 
-//# Toast helper (native-like notification)
-function showToast(msg) {
+//# Toast helper (native-like notification, optional UNDO action)
+function showToast(msg, actionLabel, onAction) {
     let toast = document.querySelector('.toast');
     if (!toast) {
         toast = document.createElement('div');
         toast.className = 'toast';
         document.body.append(toast);
     }
+    clearTimeout(showToast._timer);
+
     toast.textContent = msg;
+    toast.classList.toggle('undo', !!actionLabel);
+
+    if (actionLabel) {
+        const actionBtn = document.createElement('button');
+        actionBtn.className = 'toast-action';
+        actionBtn.textContent = actionLabel;
+        actionBtn.onclick = function () {
+            hideToast();
+            if (onAction) onAction();
+        };
+        toast.append(actionBtn);
+    }
+
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 1500);
+    showToast._timer = setTimeout(hideToast, actionLabel ? 5000 : 1500);
+}
+
+function hideToast() {
+    const toast = document.querySelector('.toast');
+    if (toast) {
+        toast.classList.remove('show');
+    }
+}
+
+//# Trash buffer: remembers deleted tasks for UNDO (max 20 entries)
+function getTrash() {
+    return JSON.parse(localStorage.getItem('trash')) || [];
+}
+
+function setTrash(trash) {
+    localStorage.setItem('trash', JSON.stringify(trash.slice(-20)));
+}
+
+//# Put a restored task back at its original position
+function positionTask(div, index) {
+    const tasks = Array.from(tasksDiv.querySelectorAll('.task'));
+    if (index < tasks.length - 1) {
+        tasksDiv.insertBefore(div, tasks[index]);
+    }
+}
+
+//# Re-apply the strike state of a restored task
+function applyStruck(div, struck, text) {
+    if (struck) {
+        div.children[1].classList.add('line');
+        div.children[0].checked = true;
+        const lineArr = JSON.parse(localStorage.getItem('line')) || [];
+        if (!lineArr.includes(text)) {
+            lineArr.push(text);
+            localStorage.setItem('line', JSON.stringify(lineArr));
+        }
+    }
+}
+
+//# UNDO: restore the last trash entry (a single task or a whole batch)
+function restoreLast() {
+    const trash = getTrash();
+    const entry = trash.pop();
+    if (!entry) return;
+    setTrash(trash);
+
+    const items = entry.batch || [entry];
+    items.forEach((item) => {
+        const div = createTasks(item.text);
+        positionTask(div, item.index);
+        applyStruck(div, item.struck, item.text);
+    });
+    localStorageUpdate();
 }
 
 //# Kill the native long-press copy menu on task text only
@@ -428,11 +587,22 @@ function createTasks(task) {
 
     deleteBtn.onclick = function () {
 
+        // Save to trash for UNDO (text, position, strike state)
+        const index = Array.from(tasksDiv.querySelectorAll('.task')).indexOf(div);
+        const trash = getTrash();
+        trash.push({
+            text: div.children[1].firstChild.nodeValue.trim(),
+            index: index,
+            struck: div.children[1].classList.contains('line')
+        });
+        setTrash(trash);
+
         div.classList.add('done');
 
         setTimeout(() => {
             div.remove();
             localStorageUpdate();
+            showToast('Task deleted', 'UNDO', restoreLast);
         }, 120);
 
         if (localStorage.getItem('line')) {
@@ -520,6 +690,8 @@ function createTasks(task) {
             lastTap = now;
         }
     }, false);
+
+    return div;
 }
 
 
@@ -527,33 +699,70 @@ function createTasks(task) {
 
 //! clear All Button
 clearAll.onclick = function () {
-  
-  if(JSON.parse(localStorage.getItem('tasks')).length > 0) {
-    
-    clearAll.style.color = 'hsl(0, 55%, 50%)';
-    clearAll.style.backgroundColor = 'white';
-  
-    setTimeout(() => {
-      clearAll.style.color = 'white';
-      clearAll.style.backgroundColor = 'hsl(0, 55%, 50%)';
-    }, 130);
-  }
+    if (document.querySelectorAll('.task').length > 0) {
+        modalOverlay.classList.add('show');
+    }
+}
 
-    if (localStorage.getItem('line')) {
-        
-      localStorage.setItem('line', '[]');
+modalNo.onclick = function () {
+    modalOverlay.classList.remove('show');
+}
+
+// Tapping the dark overlay itself also closes the popup
+modalOverlay.onclick = function (e) {
+    if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('show');
+    }
+}
+
+modalYes.onclick = function () {
+
+    // Close the popup immediately so the clear animation is fully visible
+    modalOverlay.classList.remove('show');
+
+    const tasks = Array.from(tasksDiv.querySelectorAll('.task'));
+    if (tasks.length === 0) return;
+
+    // Snapshot every task into ONE trash entry (for batch UNDO)
+    const batch = tasks.map((task, i) => ({
+        text: task.children[1].firstChild.nodeValue.trim(),
+        index: i,
+        struck: task.children[1].classList.contains('line')
+    }));
+    const trash = getTrash();
+    trash.push({ batch: batch });
+    setTrash(trash);
+
+    if (JSON.parse(localStorage.getItem('tasks')).length > 0) {
+
+        clearAll.style.color = 'hsl(0, 55%, 50%)';
+        clearAll.style.backgroundColor = 'white';
+
+        setTimeout(() => {
+            clearAll.style.color = 'white';
+            clearAll.style.backgroundColor = 'hsl(0, 55%, 50%)';
+        }, 130);
     }
 
-    tasksDiv.querySelectorAll('.task').forEach((task, i) => {
+    if (localStorage.getItem('line')) {
+
+        localStorage.setItem('line', '[]');
+    }
+
+    tasks.forEach((task, i) => {
         task.classList.add('done');
         task.style.transitionDelay = (20 * i) + 'ms';
-       
+
         setTimeout(() => {
-          task.remove();
-          localStorageUpdate();
-        },130);
+            task.remove();
+            localStorageUpdate();
+        }, 130);
     });
-    
+
+    // When everything is really gone, offer UNDO
+    setTimeout(() => {
+        showToast('All tasks deleted', 'UNDO', restoreLast);
+    }, 130 + (20 * (tasks.length - 1)) + 120);
 }
 
 
