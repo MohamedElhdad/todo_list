@@ -277,13 +277,21 @@ main .task-list {
   100% { background-size: 100% 1.5em; }
 }
 
-/* Strike drawn with a per-line repeating background, so it crosses
-   EVERY text line (not just the middle). 1.5em = the line-height (1.5). */
+/* Strike as an overlay ABOVE the text, repeating once per text line
+   (1.5em = the line-height 1.5), so it crosses EVERY line. */
 .line {
+  position: relative;
+}
+
+.line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   background-image: linear-gradient(to bottom, rgba(255, 0, 0, 0.8) 0 1.5px, transparent 1.5px);
   background-repeat: repeat-y;
-  background-size: 0% 1.5em;
-  background-position: 0 0.72em;
+  background-size: 100% 1.5em;
+  background-position: 0 0.62em;
   animation-name: line;
   animation-duration: 0.2s;
   animation-timing-function: linear;
