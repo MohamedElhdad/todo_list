@@ -177,8 +177,12 @@ main .task-list {
 .task-content {
   line-height: 1.5;
   word-break: break-all;
-  user-select: none;
-  -webkit-user-select: none;
+}
+
+/* Double-click selects the word for a split second; keep it invisible but copyable */
+.task-content::selection {
+  background-color: transparent;
+  color: inherit;
 }
 
 .count{
