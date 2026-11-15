@@ -23,7 +23,7 @@
 	    <h1>List<span>X</span>
 	    </h1>
 	    <form>
-	      <input type="text" class="task-input" placeholder="Write a new Task.">
+	      <input type="text" class="task-input" placeholder="Write a new task.">
 	      <button type="button" title="Add" class="add">+</button>
 	    </form>
 	  </header>
@@ -55,11 +55,19 @@
 	  <!-- Edit task modal -->
 	  <div class="modal-overlay edit-modal-overlay">
 	    <div class="modal edit-modal">
-	      <p>Edit task</p>
-	      <input type="text" class="edit-input" placeholder="Edit task">
+	      <div class="edit-heading">
+	        <span class="edit-icon" aria-hidden="true">
+	          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7.4 18.6 3.4 19.6l1-4L16.4 3.6z"/></svg>
+	        </span>
+	        <div class="edit-heading-text">
+	          <h2>Edit Task</h2>
+	          <p>Change the task text</p>
+	        </div>
+	      </div>
+	      <input type="text" class="edit-input" autocomplete="off" spellcheck="false" placeholder="Task text...">
 	      <div class="modal-buttons">
-	        <button class="modal-save">Save</button>
 	        <button class="modal-cancel">Cancel</button>
+	        <button class="modal-save">Save</button>
 	      </div>
 	    </div>
 	  </div>
