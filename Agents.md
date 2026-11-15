@@ -64,11 +64,20 @@ Then reload **twice** (first load installs the SW, second load is served by it).
 - Per-element weight by **script detection**, not a shared class:
 
 ```js
-const hasArabic = (t) => /\p{Script=Arabic}/u.test(t);   // never hand-write codepoint ranges
+// Built at RUNTIME and cached. A regex LITERAL containing \p{...} is parsed when
+// the whole file is parsed, so on engines without Unicode property escapes the
+// literal itself is a fatal SyntaxError — no try/catch inside the file can save it.
+let arabicRe = null;
+try { arabicRe = new RegExp('\\p{Script=Arabic}', 'u'); } catch (e) { arabicRe = null; }
+
+const hasArabic = function (text) {
+    if (arabicRe) return arabicRe.test(text);
+    return /[\u0600-\u06FF\u0750-\u077F]/.test(text);   // the ONLY hand-written ranges allowed (valid, in order)
+};
 p.classList.toggle('ar', hasArabic(task));                // CSS: .task-content.ar { font-weight: 500; }
 ```
 
-- **Never** hand-write hex ranges to detect a script. `[\u0870-08FF]` is invalid (`Range out of order`) and it took the entire app down. Use `\p{Script=...}` with the `u` flag, with a try/catch fallback for older engines.
+- **Never** hand-write hex ranges to detect a script. `[\u0870-08FF]` is invalid (`Range out of order`) and it took the entire app down. Use `\p{Script=...}` — but build it at **runtime** with `new RegExp(...)`, because a regex literal with `\p{...}` is a parse-time SyntaxError on old engines and no try/catch can catch it (see the snippet above).
 - The native `text-decoration: line-through` sits slightly high on Android (font-metric driven) and **cannot be offset**: `text-underline-offset` affects `underline` only, never `line-through`. A self-drawn gradient strike was built and tested; the user preferred the native one. Don't re-attempt it unprompted.
 - If the font stack changes, bump the SW cache and delete the old font files from `fonts/` **and** from `ASSETS` in `sw.js`.
 
@@ -79,6 +88,7 @@ p.classList.toggle('ar', hasArabic(task));                // CSS: .task-content.
 3. **Never use `word-break: break-all`** — it splits Arabic words mid-character. Use `overflow-wrap: break-word` (+ `word-break: normal`).
 4. **`font-weight: 500` needs a matching face.** Tajawal ships 400/500/700 as separate files; asking for 500 with only 400+700 loaded gives the wrong result.
 5. Keep the two weight systems separate: `.task-content`/input at 400 (Latin, light) and `.ar` at 500 (Arabic, heavier).
+6. **Flex items default to `min-width: auto`** — a long unbroken word (300+ chars, a URL) makes the item's min-content width huge, so the item cannot shrink and the whole card overflows its container. `overflow-wrap: break-word` alone does nothing because the item never gets a constrained width. Any flex item that must wrap needs `min-width: 0` (`.task-content` has it — do not remove it).
 
 ## 6. Design system (v1) — the shared language
 
@@ -97,8 +107,10 @@ The logo `X` and the counter share one accent, driven by remaining (unstruck) ta
 | Remaining | `data-accent` | Colour |
 |---|---|---|
 | ≤ 2 | `low` | green `rgb(149, 218, 162)` |
-| 3–5 | `mid` | orange `hsl(33, 100%, 50%)` |
-| > 5 | `high` | red `rgb(204, 65, 65)` |
+| 3–4 | `mid` | orange `hsl(33, 100%, 50%)` |
+| ≥ 5 | `high` | red `rgb(204, 65, 65)` |
+
+> **Corrected 2026-11-15 (user-confirmed):** the code turns red at **5** remaining (`remaining > 4` in `updateAccentColor`) and that is the intended behaviour — 2 → green, 4 → orange, 5 → red. An earlier revision of this table said 3–5 orange / > 5 red: the table was the wrong side, not the code. Do not "fix" the code to match the old table.
 
 Set from `updateAccentColor(remaining)` inside `localStorageUpdate()` — that function is the single place every mutation funnels through, so it is the right hook. The `data-accent` attribute lives on `<html>`.
 
@@ -111,13 +123,16 @@ Set from `updateAccentColor(remaining)` inside `localStorageUpdate()` — that f
 - **Delete keeps a trash buffer** (max 20) so UNDO restores position *and* strike state.
 - **The counter** shows remaining (unstruck) tasks: `tasks.length - line.length`.
 - **Long-press on a task copies it** (custom toast, no native menu); the checkbox and delete button stay excluded from the double-tap handler.
+- **Very long unbroken text** (300+ chars with no spaces, or a long URL) must wrap INSIDE the task card — never overflow it, and the checkbox + delete button must stay visible. Backed by `min-width: 0` + `overflow-wrap: break-word` on `.task-content` (§5.6). Test on a 360px viewport in both themes.
+- **Escape closes whichever modal is open** (edit modal first, then the clear-all popup) — one global idempotent `keydown` handler.
 
 ## 9. localStorage keys
 
 `tasks` (array of strings), `line` (array of struck task texts), `trash` (undo buffer), `theme` (dark/light), `task-input` (sessionStorage, the in-progress input).
 
 - The `line` array is keyed by **task text**, so renaming a struck task must rewrite that array too — `saveEditTask()` does it. Forgetting this makes the strike disappear on reload.
-- `localStorageUpdate()` must tolerate a task element with no text node (an empty task once slipped in and killed the whole script). It now skips empty text instead of throwing.
+- `localStorageUpdate()` must tolerate a task element with no text node (an empty task once slipped in and killed the whole script). It now skips empty text instead of throwing (`p ? p.textContent.trim() : ''`).
+- **Known limitation (deliberately deferred):** the `line` array is keyed by task TEXT, so two tasks with identical text corrupt strike/counter state — unstriking one removes both from `line`. The proper fix is stable task IDs; don't patch around it without a decision.
 
 ## 10. Tooling notes
 

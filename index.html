@@ -3,7 +3,7 @@
 	<head>
 	  <meta charset="UTF-8">
 	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	  <!-- <link rel="shortcut icon" href="imgs/icon-192.png" type="image/x-icon"> -->
+	  <link rel="icon" type="image/png" href="imgs/icon-192.png">
 	  <link rel="stylesheet" href="css/style.css" type="text/css">
 	  <link rel="manifest" href="manifest.json">
 	  <meta name="theme-color" content="#141B1F">
@@ -23,7 +23,7 @@
 	    <h1>List<span class="logo-x">X</span>
 	    </h1>
 	    <form>
-	      <input type="text" class="task-input" placeholder="Write a new task.">
+	      <input type="text" class="task-input" dir="auto" placeholder="Write a new task.">
 	      <button type="button" title="Add" class="add">+</button>
 	    </form>
 	  </header>
@@ -36,9 +36,9 @@
 	    </header>
 	    <ul class="task-list">
 	      <!-- Placeholder text when no tasks are present -->
-	      <div class="empty">
+	      <li class="empty">
 	        No tasks
-	      </div>
+	      </li>
 	    </ul>
 	  </main>
 
@@ -72,7 +72,7 @@
 	          <p>Change the task text</p>
 	        </div>
 	      </div>
-	      <input type="text" class="edit-input" autocomplete="off" spellcheck="false" placeholder="Task text...">
+	      <input type="text" class="edit-input" dir="auto" autocomplete="off" spellcheck="false" placeholder="Task text...">
 	      <div class="modal-buttons">
 	        <button class="modal-cancel">Cancel</button>
 	        <button class="modal-save">Save</button>

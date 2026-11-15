@@ -15,7 +15,7 @@ const editSave = document.querySelector('.modal-save');
 const editCancel = document.querySelector('.modal-cancel');
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 
-//# Theme: dark by default, ئthe choice is saved in localStorage
+//# Theme: dark by default, the choice is saved in localStorage
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -34,7 +34,7 @@ let editingOriginalText = '';
 
 function openEditModal(p) {
     editingTaskElement = p;
-    editingOriginalText = p.firstChild.nodeValue.trim();
+    editingOriginalText = p.textContent.trim();
     editInput.value = editingOriginalText;
     editInput.classList.toggle('ar', hasArabic(editInput.value));
     editModalOverlay.classList.add('show');
@@ -58,7 +58,7 @@ function saveEditTask() {
     if (newValue === '') return;
 
     const wasStruck = editingTaskElement.classList.contains('line');
-    editingTaskElement.firstChild.nodeValue = newValue;
+    editingTaskElement.textContent = newValue;
     editingTaskElement.classList.toggle('ar', hasArabic(newValue));
 
     // Keep the strike state in localStorage in sync with the renamed text
@@ -221,13 +221,17 @@ document.addEventListener('contextmenu', function (e) {
 
 
 //# Detect Arabic script in a string (tasks/input get heavier Arabic styling)
+//# The regex is built at RUNTIME and cached: a regex literal containing \p{...}
+//# is parsed when the whole file is parsed, so on an engine without Unicode
+//# property escapes the literal itself is a fatal SyntaxError and the try/catch
+//# would never run (see Agents.md §1/§4).
+let arabicRe = null;
+try { arabicRe = new RegExp('\\p{Script=Arabic}', 'u'); } catch (e) { arabicRe = null; }
+
 const hasArabic = function (text) {
-    try {
-        return /\p{Script=Arabic}/u.test(text);
-    } catch (e) {
-        // Fallback for engines without Unicode property escape support
-        return /[\u0600-\u06FF\u0750-\u077F]/.test(text);
-    }
+    if (arabicRe) return arabicRe.test(text);
+    // Fallback for engines without Unicode property escapes (valid, in-order ranges only)
+    return /[\u0600-\u06FF\u0750-\u077F]/.test(text);
 };
 
 const updateScriptClass = function (el) {
@@ -299,8 +303,15 @@ function createTasks(task) {
     
     const div = document.createElement('div');
     div.className = 'task';
-    div.innerHTML = ` <p class="task-content">${task}</p>`;
-    div.querySelector('.task-content').classList.toggle('ar', hasArabic(task));
+    // Build the text node with textContent — user text must never pass through
+    // innerHTML (XSS: <img src=x onerror=...> used to execute, and any "<" broke
+    // the DOM structure so .firstChild/.children[1] consumers threw).
+    const p = document.createElement('p');
+    p.className = 'task-content';
+    p.textContent = task;
+    p.dir = 'auto';                    // direction follows the content (mixed Arabic/English)
+    p.classList.toggle('ar', hasArabic(task));
+    div.append(p);
     const deleteInput = document.createElement('input');
     deleteInput.type = 'checkbox';
     deleteInput.className = 'state';
@@ -324,7 +335,7 @@ function createTasks(task) {
         const index = Array.from(tasksDiv.querySelectorAll('.task')).indexOf(div);
         const trash = getTrash();
         trash.push({
-            text: div.children[1].firstChild.nodeValue.trim(),
+            text: div.children[1].textContent.trim(),
             index: index,
             struck: div.children[1].classList.contains('line')
         });
@@ -339,17 +350,15 @@ function createTasks(task) {
         }, 120);
 
         if (localStorage.getItem('line')) {
-            localStorage.setItem('line', JSON.stringify(JSON.parse(localStorage.getItem('line')).filter(e => e != div.children[1].firstChild.nodeValue.trim())));
+            localStorage.setItem('line', JSON.stringify(JSON.parse(localStorage.getItem('line')).filter(e => e != div.children[1].textContent.trim())));
         }
     };
-
-   const p = div.children[1];
 
     //# Line-Through Task (checkbox only; double-click now opens edit modal)
     const toggleLine = function () {
 
         window.getSelection().removeAllRanges();
-        const pValue = this.firstChild.nodeValue.trim()
+        const pValue = this.textContent.trim()
 
         let lineArr = JSON.parse(localStorage.getItem('line')) || [];
 
@@ -388,7 +397,7 @@ function createTasks(task) {
     let justCopied = false;
 
     const copyTask = function () {
-        const pValue = p.firstChild.nodeValue.trim();
+        const pValue = p.textContent.trim();
         copyText(pValue).catch(() => {});
         p.classList.add('copying');
         setTimeout(() => p.classList.remove('copying'), 400);
@@ -460,6 +469,15 @@ modalOverlay.onclick = function (e) {
     }
 }
 
+// Escape closes whichever modal is open (edit modal first, then clear-all).
+// Both close paths are idempotent, so the edit input's own Escape handler and
+// this global one firing together is harmless.
+document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (editModalOverlay.classList.contains('show')) { closeEditModal(); return; }
+    if (modalOverlay.classList.contains('show')) modalOverlay.classList.remove('show');
+});
+
 modalYes.onclick = function () {
 
     // Close the popup immediately so the clear animation is fully visible
@@ -470,7 +488,7 @@ modalYes.onclick = function () {
 
     // Snapshot every task into ONE trash entry (for batch UNDO)
     const batch = tasks.map((task, i) => ({
-        text: task.children[1].firstChild.nodeValue.trim(),
+        text: task.children[1].textContent.trim(),
         index: i,
         struck: task.children[1].classList.contains('line')
     }));
@@ -478,7 +496,7 @@ modalYes.onclick = function () {
     trash.push({ batch: batch });
     setTrash(trash);
 
-    if (JSON.parse(localStorage.getItem('tasks')).length > 0) {
+    if ((JSON.parse(localStorage.getItem('tasks')) || []).length > 0) {
 
         clearAll.style.color = 'hsl(0, 55%, 50%)';
         clearAll.style.backgroundColor = 'white';
@@ -516,7 +534,7 @@ if (localStorage.getItem('line')) {
     
     tasksDiv.querySelectorAll('.task').forEach(task => {
             
-        if (JSON.parse(localStorage.getItem('line')).includes(task.children[1].firstChild.nodeValue.trim())) {
+        if (JSON.parse(localStorage.getItem('line')).includes(task.children[1].textContent.trim())) {
                     
             task.children[1].classList.add('line');
             task.children[0].checked = true; 
@@ -535,7 +553,7 @@ function localStorageUpdate() {
 
     document.querySelectorAll('.task').forEach(e => {
         const p = e.children[1];
-        const text = (p && p.firstChild) ? p.firstChild.nodeValue.trim() : '';
+        const text = p ? p.textContent.trim() : '';
         if (text) tasksArr.push(text);
     });
 
@@ -549,7 +567,7 @@ function localStorageUpdate() {
     
     taskCounter.innerHTML = `You have <span class='count'>${JSON.parse(localStorage.getItem('tasks')).length - lineLength}</span> tasks`;
 
-    //# Accent color: green <=2 tasks, orange 3-5, red >5 (sets on both logo-x and the counter)
+    //# Accent color: green <=2 tasks, orange 3-4, red >=5 (sets on both logo-x and the counter)
     updateAccentColor(JSON.parse(localStorage.getItem('tasks')).length - lineLength);
 
     setTimeout(() => {
@@ -562,9 +580,9 @@ function localStorageUpdate() {
 function updateAccentColor(remaining) {
     let level = 'low';                     // green: <= 2 tasks
     if (remaining > 4) {
-        level = 'high';                    // red: > 4 tasks
+        level = 'high';                    // red: >= 5 tasks (intended behaviour, see Agents.md §7)
     } else if (remaining >= 3) {
-        level = 'mid';                     // orange: 3-5 tasks
+        level = 'mid';                     // orange: 3-4 tasks
     }
     document.documentElement.setAttribute('data-accent', level);
 }
