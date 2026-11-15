@@ -111,6 +111,11 @@ function copyText(text) {
 }
 
 //# Toast helper (native-like notification, optional UNDO action)
+const TOAST_ICONS = {
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>'
+};
+
 function showToast(msg, actionLabel, onAction) {
     let toast = document.querySelector('.toast');
     if (!toast) {
@@ -120,8 +125,19 @@ function showToast(msg, actionLabel, onAction) {
     }
     clearTimeout(showToast._timer);
 
-    toast.textContent = msg;
+    // Rebuild the toast content with an icon
+    toast.textContent = '';
     toast.classList.toggle('undo', !!actionLabel);
+
+    const icon = document.createElement('span');
+    icon.className = 'toast-icon';
+    icon.innerHTML = actionLabel ? TOAST_ICONS.undo : TOAST_ICONS.check;
+
+    const msgSpan = document.createElement('span');
+    msgSpan.className = 'toast-msg';
+    msgSpan.textContent = msg;
+
+    toast.append(icon, msgSpan);
 
     if (actionLabel) {
         const actionBtn = document.createElement('button');
@@ -253,14 +269,6 @@ addBtn.onclick = function () {
     const taskText = taskInput.value.trim();
 
     if (taskText !== '') {
-
-      this.style.color = 'black';
-      this.style.backgroundColor = 'var(--soft-green)';
-
-      setTimeout(() => {
-        this.style.color = 'white';
-        this.style.backgroundColor = 'dimgray';
-      }, 130);
 
       createTasks(taskText);
 

@@ -618,6 +618,282 @@ main .task-list {
   text-decoration-color: rgba(255, 0, 0, 0.8);
 }
 
+/* ================================================================
+   LISTX DESIGN SYSTEM v1
+   Shared language: every control gets the same
+   - press     (:active -> scale down)
+   - focus     (:focus-visible -> soft green ring)
+   - hierarchy (destructive = red, affirmative = green, safe = neutral)
+   ================================================================ */
 
+/* ---------- Focus rings ---------- */
+.add:focus-visible,
+main header .clear:focus-visible,
+.task .state:focus-visible,
+.task .delete:focus-visible,
+.theme-toggle:focus-visible,
+.modal .modal-save:focus-visible,
+.modal .modal-yes:focus-visible,
+.modal .modal-cancel:focus-visible,
+.modal .modal-no:focus-visible {
+  outline: 2px solid var(--soft-green);
+  outline-offset: 2px;
+}
 
+/* ---------- Add button: armed = green, empty = muted ---------- */
+form .add {
+  background: rgb(149, 218, 162);
+  color: hsl(200, 15%, 12%);
+  box-shadow: 0 2px 10px rgba(149, 218, 162, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+form .add:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: 0 4px 16px rgba(149, 218, 162, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+form .add:active:not(:disabled) {
+  transform: scale(0.92);
+  box-shadow: 0 1px 4px rgba(149, 218, 162, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+form .add:disabled {
+  background: dimgray;
+  color: white;
+  box-shadow: none;
+}
+
+/* ---------- Clear (danger) button ---------- */
+main header .clear {
+  background: linear-gradient(180deg, rgb(229, 99, 93) 0%, rgb(205, 72, 66) 100%);
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(205, 72, 66, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: transform 150ms, filter 150ms, box-shadow 150ms;
+}
+
+main header .clear:hover {
+  filter: brightness(1.07);
+  box-shadow: 0 5px 15px rgba(205, 72, 66, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+main header .clear:active {
+  transform: scale(0.96);
+  box-shadow: 0 1px 4px rgba(205, 72, 66, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* ---------- Clear-all confirmation modal ---------- */
+.clear-modal-overlay {
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+.clear-modal {
+  text-align: left;
+  padding: 18px 20px 16px;
+  min-width: 288px;
+  max-width: min(360px, 92vw);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45), 0 2px 10px rgba(0, 0, 0, 0.3);
+  border-radius: 18px;
+  animation: edit-modal-pop 240ms cubic-bezier(0.2, 0.9, 0.28, 1.22);
+}
+
+.clear-modal .modal-buttons {
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.clear-icon {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: rgba(229, 99, 93, 0.16);
+  color: rgb(229, 99, 93);
+  box-shadow: inset 0 0 0 1px rgba(229, 99, 93, 0.32);
+}
+
+[data-theme="light"] .clear-icon {
+  background: rgba(205, 72, 66, 0.12);
+  color: rgb(205, 72, 66);
+}
+
+/* ---------- Unified modal action buttons ---------- */
+.modal .modal-save,
+.modal .modal-yes,
+.modal .modal-cancel,
+.modal .modal-no {
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 150ms, filter 150ms, box-shadow 150ms, background-color 150ms, color 150ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Affirmative: green gradient (Save) */
+.modal .modal-save {
+  background: linear-gradient(180deg, rgb(163, 229, 175) 0%, rgb(139, 209, 152) 100%);
+  color: hsl(200, 15%, 13%);
+  box-shadow: 0 2px 10px rgba(149, 218, 162, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.modal .modal-save:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 5px 16px rgba(149, 218, 162, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.modal .modal-save:active {
+  transform: scale(0.96);
+}
+
+/* Destructive: red gradient (Clear all) */
+.modal .modal-yes {
+  background: linear-gradient(180deg, rgb(229, 99, 93) 0%, rgb(205, 72, 66) 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(205, 72, 66, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.modal .modal-yes:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 5px 16px rgba(205, 72, 66, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.modal .modal-yes:active {
+  transform: scale(0.96);
+}
+
+/* Safe exit: neutral translucent (Cancel / Keep) */
+.modal .modal-cancel,
+.modal .modal-no {
+  background-color: hsla(0, 0%, 50%, 0.13);
+  color: var(--text);
+  box-shadow: none;
+}
+
+.modal .modal-cancel:hover,
+.modal .modal-no:hover {
+  background-color: hsla(0, 0%, 50%, 0.22);
+}
+
+.modal .modal-cancel:active,
+.modal .modal-no:active {
+  transform: scale(0.96);
+}
+
+/* ---------- Toasts ---------- */
+.toast {
+  position: fixed;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  background: var(--soft-green);
+  background: linear-gradient(180deg, rgb(163, 229, 175) 0%, rgb(139, 209, 152) 100%);
+  color: hsl(200, 15%, 12%);
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: 0.2px;
+  padding: 11px 16px;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms, transform 200ms;
+  z-index: 12;
+}
+
+.toast .toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast .toast-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.undo {
+  pointer-events: auto;
+  cursor: pointer;
+  background: var(--darky);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.4);
+}
+
+.toast.undo .toast-icon {
+  color: var(--soft-green);
+}
+
+.toast .toast-action {
+  pointer-events: none;
+  border: none;
+  background: none;
+  padding: 2px 2px 2px 10px;
+  margin-left: 0;
+  color: var(--soft-green);
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+/* ---------- Smaller pieces ---------- */
+.task .state:checked {
+  box-shadow: 0 0 0 3px rgba(149, 218, 162, 0.28);
+}
+
+.task .state {
+  transition: background-color 150ms, border-color 150ms, transform 150ms, box-shadow 150ms;
+}
+
+.task .delete {
+  border-radius: 8px;
+}
+
+.task .delete:active {
+  transform: scale(0.92);
+}
+
+.count {
+  color: var(--soft-green);
+  font-weight: 700;
+}
+
+.task-list div.empty {
+  color: var(--border);
+  font-weight: 600;
+  letter-spacing: 1px;
+  font-size: 12px;
+  padding-top: 20px;
+  text-transform: uppercase;
+}
+
+.theme-toggle {
+  border-radius: 50%;
+}
 
