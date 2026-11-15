@@ -560,9 +560,9 @@ function localStorageUpdate() {
 
 //# Switch the brand accent (logo X + counter) based on remaining task count
 function updateAccentColor(remaining) {
-    let level = 'low';                     // green: <=2 tasks
-    if (remaining > 5) {
-        level = 'high';                    // red: >5 tasks
+    let level = 'low';                     // green: <= 2 tasks
+    if (remaining > 4) {
+        level = 'high';                    // red: > 4 tasks
     } else if (remaining >= 3) {
         level = 'mid';                     // orange: 3-5 tasks
     }

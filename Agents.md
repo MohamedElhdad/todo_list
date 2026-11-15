@@ -1,24 +1,31 @@
 # Agents.md — Working on ListX PWA
 
-> Read this file before every change to the repo. Every rule here was learned the hard way in the last session — including a completely broken deploy.
+> Read this file before every change to the repo. Every rule here was learned the hard way in a real session — including a completely broken deploy and a broken regex that killed the whole app for a minute.
+
+**Stack:** vanilla HTML/CSS/JS, no framework, no build step. Files: `index.html`, `css/style.css`, `js/app.js`, `sw.js`, `manifest.json`, `fonts/`, `imgs/`.
+
+---
 
 ## 1. The golden rule: no console errors, ever
 
-A single `SyntaxError` in `js/app.js` kills **the whole app** — add button, strike, copy, undo, clear, everything.
+A single `SyntaxError` in `js/app.js` kills **the whole app** — add button, strike, copy, undo, clear, everything. One bad regex (`[\u0870-08FF]`, a malformed range) shipped to production and broke every control.
 
 ```
 Before every commit:
-□ git status --short           → no test screenshots (root *.png, .playwright-mcp/)
-□ Open the page in the test browser
-□ Manually do: add (Arabic + English), strike both, toggle theme, Clear → modal, type-only-spaces → add disabled
-□ console_messages → 0 errors
+□ git status --short            → no test screenshots (root *.png), no .playwright-mcp/
+□ node --check js/app.js         → catches syntax errors before they ship
+□ Open the page in a FRESH browser tab (see §11)
+□ Exercise: add (Arabic + English), strike via checkbox, double-click → edit modal,
+  edit + save, edit + cancel, theme toggle, Clear → modal, spaces-only input → add disabled,
+  delete → UNDO toast
+□ console errors → 0
 □ Push
-□ Verify live via HTTP with cache-bust (see §4)
+□ Verify live via HTTP with cache-bust (see §3)
 ```
 
 ## 2. `git push` ≠ the site is updated
 
-GitHub Pages can and does go down ("We're having a really bad day" happened repeatedly during this session). Deployment lag + CDN + `Cache-Control: max-age=600` means users may see old files for minutes after a push.
+GitHub Pages goes down repeatedly ("We're having a really bad day"), deployments lag, and `Cache-Control: max-age=600` means browsers keep serving old files for ~10 minutes. A commit can be live on `origin/main` and still invisible to the user.
 
 **Always verify with HTTP + cache-bust, never trust the push output alone:**
 
@@ -28,98 +35,122 @@ $h = @{ 'User-Agent' = $ua; 'Cache-Control' = 'no-cache' }
 Invoke-WebRequest -Uri "https://mohamedelhdad.github.io/todo_list/sw.js?bust=$((New-Guid).ToString('N'))" -Headers $h -UseBasicParsing
 ```
 
+**When the user says "it's still the same":** it is almost always stale HTTP/SW cache, not a bug in the new code. Ask them to open the app twice or three times, or clear site data in Chrome settings. Say this explicitly instead of re-debugging.
+
 ## 3. Service Worker rules (the PWA)
 
-- **Every change gets a new `CACHE_NAME`** — never reuse versions (this happened; two different builds ended up under `v25`).
-- The SW install fetches assets with `cache: 'reload'` so the new cache always holds fresh files, not a stale HTTP cache.
-- A phone that installed an old SW will keep serving **the old JS** until the browser HTTP cache expires (up to ~10 minutes) or the user clears site data.
-- The user will often say "still the same" after a fix commit — it is almost always stale HTTP/SW cache, not a bug in the new code. Ask them to open the app **twice or three times**, or clear site data in Chrome settings.
+- **Every change gets a new `CACHE_NAME`** — never reuse a version (two different builds ended up under `v25`; the phone silently kept the old one).
+- The SW `install` handler fetches assets with `cache: 'reload'` so a new cache always holds fresh files instead of a stale HTTP cache.
+- `skipWaiting()` + `clients.claim()` are already wired in `install`/`activate` — do not remove them, they are what makes the update reach an already-open app.
+- `activate` deletes every cache whose name !== `CACHE_NAME`. That is the only cleanup path.
 
-**Unregistering the SW in a test browser (required for a clean check):**
+**Clean-slate check in a test browser (required before trusting any UI verification):**
 
 ```js
 navigator.serviceWorker.getRegistrations().then(rs => Promise.all(rs.map(r => r.unregister())));
 caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k))));
 ```
 
-## 4. Verify the live site, not the local repo
+Then reload **twice** (first load installs the SW, second load is served by it). See §11 — this is the single most common source of "my fix doesn't show up".
 
-- `git log --oneline` tells you what was committed, not what the user gets.
-- After every push, check **sw.js** and the asset you changed via the cache-bust fetch above.
-- If the live site still shows the old version, the change has not reached users — even if the commit went through locally.
-
-## 5. Fonts — the rules that matter
-
-Current state, intentionally self-hosted:
+## 4. Fonts — current state, intentionally self-hosted
 
 | Script | Family | Weights | File(s) |
 |---|---|---|---|
 | Arabic | **Tajawal** | 400 / 500 / 700 | `fonts/tajawal-{400,500,700}-arabic.woff2` |
 | Latin | **Inter** (Variable) | 100–900 | `fonts/inter-var-latin.woff2` |
-| Icons | SVG (inline) | — | `index.html` |
 
-- Every @font-face declares its `unicode-range` so the Arabic file never covers Latin glyphs and vice versa.
-- Per-element weight via **script detection**, not a shared class:
+- Every `@font-face` declares its own `unicode-range`, so the Arabic file never covers Latin glyphs and vice versa.
+- Per-element weight by **script detection**, not a shared class:
 
 ```js
-const hasArabic = (t) => /\p{Script=Arabic}/u.test(t);   // simple, reliable
-// do NOT hand-write hex codepoint ranges — this caused a SyntaxError that killed the whole script
-// and it broke the app for ~1 minute on the live site until the fix shipped
-p.classList.toggle('ar', hasArabic(text));               // CSS: .task-content.ar { font-weight: 500; }
+const hasArabic = (t) => /\p{Script=Arabic}/u.test(t);   // never hand-write codepoint ranges
+p.classList.toggle('ar', hasArabic(task));                // CSS: .task-content.ar { font-weight: 500; }
 ```
 
-- `unicode-range` + `\p{Script=Arabic}` together: Arabic → Tajawal 500, English → Inter 400, same DOM node, mixed text just works.
-- Vazirmatn was removed (Arabic line-through rendered too high in his device). Cairo/Tajawal tested better.
+- **Never** hand-write hex ranges to detect a script. `[\u0870-08FF]` is invalid (`Range out of order`) and it took the entire app down. Use `\p{Script=...}` with the `u` flag, with a try/catch fallback for older engines.
+- The native `text-decoration: line-through` sits slightly high on Android (font-metric driven) and **cannot be offset**: `text-underline-offset` affects `underline` only, never `line-through`. A self-drawn gradient strike was built and tested; the user preferred the native one. Don't re-attempt it unprompted.
+- If the font stack changes, bump the SW cache and delete the old font files from `fonts/` **and** from `ASSETS` in `sw.js`.
 
-## 6. Line-through strike
+## 5. CSS traps hit in this session
 
-- **Native `text-decoration: line-through`** is the current choice: perfect on Windows Chromium, slightly high on Android (unavoidable via CSS — `text-underline-offset` affects only `underline`, never `line-through`).
-- A self-drawn gradient strike was built and tested, but the user chose the native one. Don't re-attempt it without a direct request.
-- `word-break: break-all` was replaced by `overflow-wrap: break-word` — the old behavior split Arabic words mid-character across lines. Do not reintroduce it.
+1. **Nested selectors break colour rules.** `header h1 { > span.logo-x { color: var(--accent) } }` compiled to `& > span.logo-x` and the colour never applied. Use **flat selectors** (`header h1 .logo-x`) for anything colour- or transition-critical.
+2. **CSS variables do not animate through `transition`.** `color: var(--accent)` + `transition: color 350ms` did not animate — the value jumped only when the var was re-read. Use an **attribute/class on the root** (`html[data-accent="mid"]`) so the browser sees a real colour change and transitions it.
+3. **Never use `word-break: break-all`** — it splits Arabic words mid-character. Use `overflow-wrap: break-word` (+ `word-break: normal`).
+4. **`font-weight: 500` needs a matching face.** Tajawal ships 400/500/700 as separate files; asking for 500 with only 400+700 loaded gives the wrong result.
+5. Keep the two weight systems separate: `.task-content`/input at 400 (Latin, light) and `.ar` at 500 (Arabic, heavier).
 
-## 7. Checklist before every commit
+## 6. Design system (v1) — the shared language
+
+Every interactive control follows the same rules:
+
+- **Hierarchy by colour:** green = affirmative (Save, armed add), red = destructive (Clear, Clear all, delete), neutral/translucent = safe exit (Cancel, Keep tasks).
+- **Every button:** `:hover` (brighten), `:active` (`scale(.92–.96)`), `:focus-visible` (2px `--soft-green` outline, 2px offset).
+- **Shadows are tight.** The first pass used `0 5px 16px` glows that looked blown out on the dark background; the user trimmed them manually to ~`0 4px 10px` and flattened the danger reds. Keep glows subtle — `0 2px 5px` for resting, `0 4px 10px` for hover.
+- **Modals:** blurred backdrop (`backdrop-filter: blur(3px)`), 18px radius, spring entry (`240ms`, `cubic-bezier(.2,.9,.28,1.22)`), icon chip + title + one-line subtitle.
+- **Toasts:** icon + message, 14px radius, 26px from the bottom, spring-free fade/slide, UNDO variant is a dark surface with a green action.
+
+## 7. Accent colour follows the task count
+
+The logo `X` and the counter share one accent, driven by remaining (unstruck) tasks:
+
+| Remaining | `data-accent` | Colour |
+|---|---|---|
+| ≤ 2 | `low` | green `rgb(149, 218, 162)` |
+| 3–5 | `mid` | orange `hsl(33, 100%, 50%)` |
+| > 5 | `high` | red `rgb(204, 65, 65)` |
+
+Set from `updateAccentColor(remaining)` inside `localStorageUpdate()` — that function is the single place every mutation funnels through, so it is the right hook. The `data-accent` attribute lives on `<html>`.
+
+## 8. Behaviours that must not regress
+
+- **Double-click / double-tap a task → edit modal** (not strike). Strike is the checkbox only.
+- **The edit modal edits in place** — the task keeps its position in the list, is not re-appended.
+- **Enter in the main input adds the task** (keydown → `addBtn.click()`), never reloads the page. The form must never submit.
+- **Spaces-only input** keeps the add button disabled (`trim()` check).
+- **Delete keeps a trash buffer** (max 20) so UNDO restores position *and* strike state.
+- **The counter** shows remaining (unstruck) tasks: `tasks.length - line.length`.
+- **Long-press on a task copies it** (custom toast, no native menu); the checkbox and delete button stay excluded from the double-tap handler.
+
+## 9. localStorage keys
+
+`tasks` (array of strings), `line` (array of struck task texts), `trash` (undo buffer), `theme` (dark/light), `task-input` (sessionStorage, the in-progress input).
+
+- The `line` array is keyed by **task text**, so renaming a struck task must rewrite that array too — `saveEditTask()` does it. Forgetting this makes the strike disappear on reload.
+- `localStorageUpdate()` must tolerate a task element with no text node (an empty task once slipped in and killed the whole script). It now skips empty text instead of throwing.
+
+## 10. Tooling notes
+
+- **Use `node` for surgical file edits.** PowerShell quoting inside `shell` commands mangles HTML/CSS with tabs and quotes (the `-replace`/string-literal traps cost several failed edits). Write a temp `.js` file, run it with `node`, delete it.
+- **`browser.evaluate` runs in one shared page scope.** Declaring `const i = ...` in two evaluations throws `Identifier 'i' has already been declared`. Use `window._x` or unique names per call.
+- **Synthetic key events:** `browser.press` may not deliver a `keydown` with `key: 'Enter'` the way the app expects. Dispatch it explicitly when a key path must be verified:
+  `el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))`.
+- **The `browse` MCP server drives the user's real Chrome** through the browse extension (it is what the user installed). It gives access to their logged-in sessions and their actual ListX data — never create, edit or delete their real tasks during a verification pass; use a scratch tab and `localStorage.clear()` first.
+- `browse execute` needs `--session <id>` **and** `--target-url <fragment>` together, otherwise it opens a blank tab or fails with "No existing attached page URL includes ...".
+
+## 11. The verification protocol (learned the expensive way)
+
+A verification that reuses a warm tab can silently test the **old** build — the SW cache, the HTTP cache, or a stale `index.html` all serve yesterday's code. Two of the "failures" in this session were the tool showing stale CSS, not broken code.
 
 ```
-□ git status --short          ← no verification screenshots, no .playwright-mcp/
-□ Test in a browser (playwright)
-  □ Add task (Arabic + English)
-  □ Strike one of each via the checkbox
-  □ Toggle theme (dark ↔ light)
-  □ Open Clear → modal → No (Escape path)
-  □ Type only spaces → Add button disabled
-□ console_messages → 0 errors
-□ Commit and push
-□ HTTP check on sw.js + changed file(s) with cache-bust
-□ Tell the user exactly what was verified and what was not (especially if checks were interrupted)
+1. Close every tab of the session.
+2. Open a NEW tab.
+3. Run the SW unregister + cache delete snippet (§3).
+4. Reload twice.
+5. Only then trust what you see.
 ```
 
-## 8. Hard-won lessons from this session
+Cheap sanity check before any UI assertion:
 
-1. **"0 console errors" is the bar.** Not "should work", not "I pushed the fix" — the console must be silent.
-2. **Cache names never repeat.** Same name → stale users get the old build silently.
-3. **Push ≠ deploy.** GitHub Pages can fail, cache, or serve stale. Verify via HTTP.
-4. **User-perceived staleness is usually HTTP/SW cache**, not a missing fix. Ask for two or three opens before "it's still broken".
-5. **Don't repeat work the user already rejected.** If they pick font X over font Y, don't re-litigate it on the next task.
-6. **`.gitignore` at root covers only `/*.png`** — manifest icons stay tracked, ad-hoc screenshots don't.
-7. **Test in a real phone-HTTP-served flow**, not just a desktop browser — Android Chromium differs from Windows Chromium in rendering (e.g. native strike position).
-8. **Never hand-write Unicode codepoint ranges** to detect a script. Use `\p{Script=...}` with the `u` flag.
-9. **Verification runs before commit, not after.** If an error is found after commit, fix it and ship immediately rather than doing more work on a broken base.
-10. **When you add a file, register it in `ASSETS` in `sw.js`** (or it won't be available offline).
+```js
+document.styleSheets[0].cssRules.length   // does the stylesheet even contain the new rule?
+```
 
-## 9. Current environment notes
+If the rule you just wrote is missing from the CSSOM, you are looking at a cached file — fix the cache, not the code.
 
-- Single repo, single page (no framework). `index.html` + `css/style.css` + `js/app.js` + `sw.js`.
-- localStorage keys: `tasks`, `line`, `trash`, `theme`, `task-input` (sessionStorage for input).
-- Icons live in `imgs/` (SVG inline in `index.html` for toggle + delete + checkbox).
-- PWA installable via `manifest.json`. Egyptian Arabic audience; use Egyptian Arabic in chats, English in code.
-- Live URL: `https://mohamedelhdad.github.io/todo_list/`
+## 12. Current environment notes
 
-## 10. What to tell the user when reporting
-
-- Be honest about what was verified and what was not (e.g. "GitHub Pages is currently serving stale content for me to verify around this").
-- If you broke production at any point, say so plainly — they will value the truth over the cover story.
-- If in doubt about the user's phone vs the desktop difference (which is most of the Android-strike pain), say it's a device-specific rendering issue and lead to the SW/unregister path — don't try to "fix" an Android-specific behavior with a generic workaround.
-
----
-
-> **One sentence to live by:** Don't trust the code, trust the browser and a clean console — and the user's eyes.
+- Egyptian Arabic in chats, English in code and docs.
+- The user is on a real Android phone (PWA installed) and a laptop; **Android Chromium renders differently from Windows Chromium** (strike position, font metrics, viewport behaviour). Never conclude "it works" from the laptop alone.
+- The user's phone keeps the old build until the SW updates → always tell them to open the app twice after a deploy.
+- `Agents.md` (this file) is the memory of the project — update it whenever a new rule is learned.
