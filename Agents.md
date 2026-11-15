@@ -121,18 +121,19 @@ Set from `updateAccentColor(remaining)` inside `localStorageUpdate()` — that f
 - **Enter in the main input adds the task** (keydown → `addBtn.click()`), never reloads the page. The form must never submit.
 - **Spaces-only input** keeps the add button disabled (`trim()` check).
 - **Delete keeps a trash buffer** (max 20) so UNDO restores position *and* strike state.
-- **The counter** shows remaining (unstruck) tasks: `tasks.length - line.length`.
+- **Two tasks with identical text are fully independent** (stable ids): striking/renaming/deleting one never affects the other — across reloads and UNDO.
+- **The counter** shows remaining (unstruck) tasks: `tasks.filter(t => !t.done).length` (per-task `done` since the v47 id migration).
 - **Long-press on a task copies it** (custom toast, no native menu); the checkbox and delete button stay excluded from the double-tap handler.
 - **Very long unbroken text** (300+ chars with no spaces, or a long URL) must wrap INSIDE the task card — never overflow it, and the checkbox + delete button must stay visible. Backed by `min-width: 0` + `overflow-wrap: break-word` on `.task-content` (§5.6). Test on a 360px viewport in both themes.
 - **Escape closes whichever modal is open** (edit modal first, then the clear-all popup) — one global idempotent `keydown` handler.
 
 ## 9. localStorage keys
 
-`tasks` (array of strings), `line` (array of struck task texts), `trash` (undo buffer), `theme` (dark/light), `task-input` (sessionStorage, the in-progress input).
+`tasks` = `[{id, text, done}]` (order = display order), `trash` = `{id, text, index, done}` entries or `{batch: [...]}`, `theme` (dark/light), `task-input` (sessionStorage, the in-progress input).
 
-- The `line` array is keyed by **task text**, so renaming a struck task must rewrite that array too — `saveEditTask()` does it. Forgetting this makes the strike disappear on reload.
+- The `line` key was retired 2026-11-15 by the id migration — `loadTasks()` converts the legacy string+line format once and removes the key. Rename needs no extra bookkeeping now.
+- Every task `<div>` carries its id in `dataset.id`; `localStorageUpdate()` is the single writer of strike state — it reads the `.line` class from the DOM and stores `done`. (The DOM/CSS class `.line` is the on-screen state and is NOT related to the retired localStorage key.)
 - `localStorageUpdate()` must tolerate a task element with no text node (an empty task once slipped in and killed the whole script). It now skips empty text instead of throwing (`p ? p.textContent.trim() : ''`).
-- **Known limitation (deliberately deferred):** the `line` array is keyed by task TEXT, so two tasks with identical text corrupt strike/counter state — unstriking one removes both from `line`. The proper fix is stable task IDs; don't patch around it without a decision.
 
 ## 10. Tooling notes
 

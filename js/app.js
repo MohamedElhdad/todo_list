@@ -1,4 +1,13 @@
 		
+//# Stable per-task identity: ids live in localStorage, not derived from text
+function newId() {
+    if (window.crypto && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    // Fallback: non-secure context or old engine
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+}
+
 const taskInput = document.querySelector('.task-input');
 const addBtn = document.querySelector('.add');
 const clearAll = document.querySelector('.clear');
@@ -57,17 +66,9 @@ function saveEditTask() {
     const newValue = editInput.value.trim();
     if (newValue === '') return;
 
-    const wasStruck = editingTaskElement.classList.contains('line');
+    // Rename needs no strike bookkeeping: strike lives on the task id (localStorageUpdate reads the DOM)
     editingTaskElement.textContent = newValue;
     editingTaskElement.classList.toggle('ar', hasArabic(newValue));
-
-    // Keep the strike state in localStorage in sync with the renamed text
-    if (wasStruck && newValue !== editingOriginalText) {
-        let lineArr = JSON.parse(localStorage.getItem('line')) || [];
-        lineArr = lineArr.filter(function (e) { return e !== editingOriginalText; });
-        lineArr.push(newValue);
-        localStorage.setItem('line', JSON.stringify(lineArr));
-    }
 
     localStorageUpdate();
     closeEditModal();
@@ -181,19 +182,6 @@ function positionTask(div, index) {
     }
 }
 
-//# Re-apply the strike state of a restored task
-function applyStruck(div, struck, text) {
-    if (struck) {
-        div.children[1].classList.add('line');
-        div.children[0].checked = true;
-        const lineArr = JSON.parse(localStorage.getItem('line')) || [];
-        if (!lineArr.includes(text)) {
-            lineArr.push(text);
-            localStorage.setItem('line', JSON.stringify(lineArr));
-        }
-    }
-}
-
 //# UNDO: restore the last trash entry (a single task or a whole batch)
 function restoreLast() {
     const trash = getTrash();
@@ -203,9 +191,9 @@ function restoreLast() {
 
     const items = entry.batch || [entry];
     items.forEach((item) => {
-        const div = createTasks(item.text);
+        // Legacy trash entries (pre-v47) have {text, index, struck} and no id
+        const div = createTasks(item.text, item.id || newId(), item.done === true || item.struck === true);
         positionTask(div, item.index);
-        applyStruck(div, item.struck, item.text);
     });
     localStorageUpdate();
 }
@@ -274,7 +262,7 @@ addBtn.onclick = function () {
 
     if (taskText !== '') {
 
-      createTasks(taskText);
+      createTasks(taskText, newId(), false);
 
       sessionStorage.setItem('task-input', '');
 
@@ -287,22 +275,52 @@ addBtn.onclick = function () {
 
 
 
-if (localStorage.getItem('tasks')) {
-    
-    const tasksArr = JSON.parse(localStorage.getItem('tasks'));
-    
-    for (const task of tasksArr) {
-        
-        createTasks(task);
+//# One-time migration: tasks was string[] + line was text[] of struck texts.
+//# New shape: tasks = [{ id, text, done }] — strike state lives ON the task.
+function loadTasks() {
+    let stored = null;
+    try { stored = JSON.parse(localStorage.getItem('tasks')); } catch (e) { stored = null; }
+    let legacyLine = [];
+    try { legacyLine = JSON.parse(localStorage.getItem('line')) || []; } catch (e) { legacyLine = []; }
+    if (!Array.isArray(legacyLine)) legacyLine = [];
+
+    let changed = false;
+    let tasksArr = [];
+
+    if (Array.isArray(stored) && stored.length && typeof stored[0] === 'string') {
+        tasksArr = stored.map(function (text) {
+            return { id: newId(), text: String(text), done: legacyLine.includes(text) };
+        });
+        changed = true;
+    } else if (Array.isArray(stored)) {
+        tasksArr = stored.map(function (t) {
+            const obj = (t && typeof t === 'object') ? t : { text: String(t) };
+            if (!obj.id) { obj.id = newId(); changed = true; }
+            if (typeof obj.done !== 'boolean') { obj.done = false; changed = true; }
+            obj.text = String(obj.text == null ? '' : obj.text);
+            return obj;
+        });
     }
+
+    if (changed) {
+        localStorage.setItem('tasks', JSON.stringify(tasksArr));
+    }
+    localStorage.removeItem('line');   // derived data now — retired by this migration
+    return tasksArr;
+}
+
+const TASKS = loadTasks();
+for (const t of TASKS) {
+    createTasks(t.text, t.id, t.done);
 }
 
 
 
-function createTasks(task) {
+function createTasks(task, id, done) {
     
     const div = document.createElement('div');
     div.className = 'task';
+    div.dataset.id = id || newId();    // stable identity — must exist before localStorageUpdate()
     // Build the text node with textContent — user text must never pass through
     // innerHTML (XSS: <img src=x onerror=...> used to execute, and any "<" broke
     // the DOM structure so .firstChild/.children[1] consumers threw).
@@ -311,10 +329,14 @@ function createTasks(task) {
     p.textContent = task;
     p.dir = 'auto';                    // direction follows the content (mixed Arabic/English)
     p.classList.toggle('ar', hasArabic(task));
+    if (done) {
+        p.classList.add('line');
+    }
     div.append(p);
     const deleteInput = document.createElement('input');
     deleteInput.type = 'checkbox';
     deleteInput.className = 'state';
+    if (done) deleteInput.checked = true;
     empty.setAttribute('hidden', '');
     div.prepend(deleteInput);
     tasksDiv.append(div);
@@ -331,13 +353,14 @@ function createTasks(task) {
 
     deleteBtn.onclick = function () {
 
-        // Save to trash for UNDO (text, position, strike state)
+        // Save to trash for UNDO (id, text, position, strike state)
         const index = Array.from(tasksDiv.querySelectorAll('.task')).indexOf(div);
         const trash = getTrash();
         trash.push({
+            id: div.dataset.id,
             text: div.children[1].textContent.trim(),
             index: index,
-            struck: div.children[1].classList.contains('line')
+            done: div.children[1].classList.contains('line')
         });
         setTrash(trash);
 
@@ -348,32 +371,18 @@ function createTasks(task) {
             localStorageUpdate();
             showToast('Task deleted', 'UNDO', restoreLast);
         }, 120);
-
-        if (localStorage.getItem('line')) {
-            localStorage.setItem('line', JSON.stringify(JSON.parse(localStorage.getItem('line')).filter(e => e != div.children[1].textContent.trim())));
-        }
     };
 
-    //# Line-Through Task (checkbox only; double-click now opens edit modal)
+    //# Line-Through Task (checkbox only; double-click opens edit modal).
+    //# Strike state is persisted by localStorageUpdate() from the DOM (.line class).
     const toggleLine = function () {
 
         window.getSelection().removeAllRanges();
-        const pValue = this.textContent.trim()
-
-        let lineArr = JSON.parse(localStorage.getItem('line')) || [];
-
         if (this.classList.contains('line')) {
-
-            lineArr = lineArr.filter(e => e != pValue);
             this.classList.remove('line');
-
         } else {
-
-            lineArr.push(pValue);
             this.classList.add('line');
         }
-
-        localStorage.setItem('line', JSON.stringify(lineArr));
 
         // Keep the checkbox in sync with the strike state
         const checkbox = this.parentElement.children[0];
@@ -488,9 +497,10 @@ modalYes.onclick = function () {
 
     // Snapshot every task into ONE trash entry (for batch UNDO)
     const batch = tasks.map((task, i) => ({
+        id: task.dataset.id,
         text: task.children[1].textContent.trim(),
         index: i,
-        struck: task.children[1].classList.contains('line')
+        done: task.children[1].classList.contains('line')
     }));
     const trash = getTrash();
     trash.push({ batch: batch });
@@ -505,11 +515,6 @@ modalYes.onclick = function () {
             clearAll.style.color = 'white';
             clearAll.style.backgroundColor = 'hsl(0, 55%, 50%)';
         }, 130);
-    }
-
-    if (localStorage.getItem('line')) {
-
-        localStorage.setItem('line', '[]');
     }
 
     tasks.forEach((task, i) => {
@@ -529,46 +534,25 @@ modalYes.onclick = function () {
 }
 
 
-//! Add Line-Through To Task If In localStorage.getItem('line');
-if (localStorage.getItem('line')) {
-    
-    tasksDiv.querySelectorAll('.task').forEach(task => {
-            
-        if (JSON.parse(localStorage.getItem('line')).includes(task.children[1].textContent.trim())) {
-                    
-            task.children[1].classList.add('line');
-            task.children[0].checked = true; 
-        } else { 
-            task.children[1].classList.remove('line');
-        }
-    });
-}
-
-
-
-//! localStorage Update
+//! localStorage Update — single writer: DOM (ids + .line class) -> storage
 function localStorageUpdate() {
 
     const tasksArr = [];
 
     document.querySelectorAll('.task').forEach(e => {
         const p = e.children[1];
+        if (!e.dataset.id) e.dataset.id = newId();   // defensive: never serialize an id-less div
         const text = p ? p.textContent.trim() : '';
-        if (text) tasksArr.push(text);
+        if (text) tasksArr.push({ id: e.dataset.id, text: text, done: p.classList.contains('line') });
     });
 
     localStorage.setItem('tasks', JSON.stringify(tasksArr));
 
-    let lineLength = 0;
-    if (localStorage.getItem('line')) {
-
-        lineLength = JSON.parse(localStorage.getItem('line')).length ;
-    }
-    
-    taskCounter.innerHTML = `You have <span class='count'>${JSON.parse(localStorage.getItem('tasks')).length - lineLength}</span> tasks`;
+    const remaining = tasksArr.filter(t => !t.done).length;
+    taskCounter.innerHTML = `You have <span class='count'>${remaining}</span> tasks`;
 
     //# Accent color: green <=2 tasks, orange 3-4, red >=5 (sets on both logo-x and the counter)
-    updateAccentColor(JSON.parse(localStorage.getItem('tasks')).length - lineLength);
+    updateAccentColor(remaining);
 
     setTimeout(() => {
        tasksDiv.querySelectorAll('.task').length == 0 ? empty.removeAttribute('hidden') : empty.setAttribute('hidden', '');
