@@ -11,7 +11,7 @@ const modalNo = document.querySelector('.modal-no');
 const themeToggle = document.querySelector('.theme-toggle');
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 
-//# Theme: dark by default, the choice is saved in localStorage
+//# Theme: dark by default, ئthe choice is saved in localStorage
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -161,6 +161,16 @@ taskInput.oninput = function () {
 
     sessionStorage.setItem('task-input', this.value);
     updateAddButton();
+}
+
+//# Enter adds the task, like the + button (no page reload, works on every device)
+taskInput.onkeydown = function (e) {
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+
+        e.preventDefault();
+        addBtn.click();
+    }
 }
 
 updateAddButton();
