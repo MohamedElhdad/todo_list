@@ -560,13 +560,13 @@ function localStorageUpdate() {
 
 //# Switch the brand accent (logo X + counter) based on remaining task count
 function updateAccentColor(remaining) {
-    let accent = 'rgb(149, 218, 162)';          // green: <=2 tasks
+    let level = 'low';                     // green: <=2 tasks
     if (remaining > 5) {
-        accent = 'rgb(204, 65, 65)';            // red: >5 tasks
+        level = 'high';                    // red: >5 tasks
     } else if (remaining >= 3) {
-        accent = 'hsl(33, 100%, 50%)';          // orange: 3-5 tasks
+        level = 'mid';                     // orange: 3-5 tasks
     }
-    document.documentElement.style.setProperty('--accent', accent);
+    document.documentElement.setAttribute('data-accent', level);
 }
 
 

@@ -97,7 +97,6 @@ form .task-input.ar {
   --danger: hsl(0, 55%, 50%);
   --shadow: none;
   --font: 'Tajawal', 'Inter', system-ui, sans-serif;
-  --accent: var(--soft-green); /* switches by remaining: green <=2, orange 3-5, red >5 */
   color-scheme: dark;
 }
 
@@ -125,12 +124,26 @@ header h1 {
   font-weight: 900;
   font-family: cursive;
   font-size: 45px;
+}
 
-  >span.logo-x {
-    color: var(--accent);
-    font-size: 55px;
-    transition: color 350ms;
-  }
+header h1 .logo-x,
+.count {
+  color: var(--soft-green);
+  transition: color 350ms;
+}
+
+html[data-accent="mid"] header h1 .logo-x,
+html[data-accent="mid"] .count {
+  color: hsl(33, 100%, 50%);
+}
+
+html[data-accent="high"] header h1 .logo-x,
+html[data-accent="high"] .count {
+  color: rgb(204, 65, 65);
+}
+
+.count {
+  font-weight: 700;
 }
 
 /* Form styling */
@@ -879,12 +892,6 @@ main header .clear:active {
 
 .task .delete:active {
   transform: scale(0.92);
-}
-
-.count {
-  color: var(--accent);
-  font-weight: 700;
-  transition: color 350ms;
 }
 
 .task-list div.empty {
