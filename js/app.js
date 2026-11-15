@@ -5,10 +5,14 @@ const clearAll = document.querySelector('.clear');
 const tasksDiv = document.querySelector('.task-list');
 const empty = document.querySelector('.empty');
 const taskCounter = document.querySelector('.task-counter');
-const modalOverlay = document.querySelector('.modal-overlay');
+const modalOverlay = document.querySelector('.modal-overlay:not(.edit-modal-overlay)');
 const modalYes = document.querySelector('.modal-yes');
 const modalNo = document.querySelector('.modal-no');
 const themeToggle = document.querySelector('.theme-toggle');
+const editModalOverlay = document.querySelector('.edit-modal-overlay');
+const editInput = document.querySelector('.edit-input');
+const editSave = document.querySelector('.modal-save');
+const editCancel = document.querySelector('.modal-cancel');
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 
 //# Theme: dark by default, ئthe choice is saved in localStorage
@@ -22,6 +26,74 @@ applyTheme(localStorage.getItem('theme') || 'dark');
 
 themeToggle.onclick = function () {
     applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+};
+
+//# Edit task modal: open on double-click/tap, edit the task in place
+let editingTaskElement = null;
+let editingOriginalText = '';
+
+function openEditModal(p) {
+    editingTaskElement = p;
+    editingOriginalText = p.firstChild.nodeValue.trim();
+    editInput.value = editingOriginalText;
+    editInput.classList.toggle('ar', hasArabic(editInput.value));
+    editModalOverlay.classList.add('show');
+    editInput.focus();
+    try {
+        editInput.setSelectionRange(editInput.value.length, editInput.value.length);
+    } catch (e) { /* input type fallback */ }
+}
+
+function closeEditModal() {
+    editModalOverlay.classList.remove('show');
+    editingTaskElement = null;
+    editingOriginalText = '';
+}
+
+function saveEditTask() {
+    if (!editingTaskElement) return;
+
+    // Don't save an empty task (silently keep it unchanged)
+    const newValue = editInput.value.trim();
+    if (newValue === '') return;
+
+    const wasStruck = editingTaskElement.classList.contains('line');
+    editingTaskElement.firstChild.nodeValue = newValue;
+    editingTaskElement.classList.toggle('ar', hasArabic(newValue));
+
+    // Keep the strike state in localStorage in sync with the renamed text
+    if (wasStruck && newValue !== editingOriginalText) {
+        let lineArr = JSON.parse(localStorage.getItem('line')) || [];
+        lineArr = lineArr.filter(function (e) { return e !== editingOriginalText; });
+        lineArr.push(newValue);
+        localStorage.setItem('line', JSON.stringify(lineArr));
+    }
+
+    localStorageUpdate();
+    closeEditModal();
+}
+
+editSave.onclick = saveEditTask;
+editCancel.onclick = closeEditModal;
+
+// Tapping the dark overlay closes (same convention as the Clear popup)
+editModalOverlay.onclick = function (e) {
+    if (e.target === editModalOverlay) {
+        closeEditModal();
+    }
+};
+
+editInput.oninput = function () {
+    editInput.classList.toggle('ar', hasArabic(this.value));
+};
+
+editInput.onkeydown = function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        saveEditTask();
+    } else if (e.key === 'Escape') {
+        closeEditModal();
+    }
 };
 
 //# Copy helper (clipboard API with fallback)
@@ -265,7 +337,7 @@ function createTasks(task) {
 
    const p = div.children[1];
 
-    //# Line-Through Task (shared by double-click on desktop and double-tap on mobile)
+    //# Line-Through Task (checkbox only; double-click now opens edit modal)
     const toggleLine = function () {
 
         window.getSelection().removeAllRanges();
@@ -293,14 +365,16 @@ function createTasks(task) {
         localStorageUpdate()
     }
 
-    p.ondblclick = toggleLine;
+    p.ondblclick = function () {
+        openEditModal(p);
+    };
 
     //# Checkbox behaves like double-click: strike (done), never delete
     deleteInput.onclick = function () {
         toggleLine.call(p);
     };
 
-    //# Mobile: custom long-press (copy) + double-tap (strike)
+    //# Mobile: custom long-press (copy) + double-tap (edit)
     let lastTap = 0;
     let pressTimer = null;
     let justCopied = false;
@@ -337,7 +411,7 @@ function createTasks(task) {
         const now = Date.now();
         if (now - lastTap <= 300) {
             e.preventDefault();
-            toggleLine.call(p);
+            openEditModal(p);
             lastTap = 0;
         } else {
             lastTap = now;

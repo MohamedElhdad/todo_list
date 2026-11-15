@@ -426,6 +426,45 @@ main .task-list {
   color: white;
 }
 
+/* Edit task modal: matches the theme, green save button */
+.edit-modal {
+  text-align: right;
+}
+
+.edit-input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 17px;
+  font-family: var(--font);
+  outline: none;
+  margin-bottom: 16px;
+  transition: border-color 150ms;
+}
+
+.edit-input::placeholder {
+  color: var(--border);
+}
+
+.edit-input:focus {
+  border-color: var(--soft-green);
+}
+
+.modal .modal-save {
+  background-color: rgb(149, 218, 162);
+  color: hsl(200, 15%, 12%);
+}
+
+.modal .modal-cancel {
+  background-color: var(--border);
+  color: white;
+}
+
 /* Theme toggle (anchored to the header, top-right - scrolls with the page) */
 .theme-toggle {
   position: absolute;
