@@ -548,11 +548,25 @@ function localStorageUpdate() {
     }
     
     taskCounter.innerHTML = `You have <span class='count'>${JSON.parse(localStorage.getItem('tasks')).length - lineLength}</span> tasks`;
-    
+
+    //# Accent color: green <=2 tasks, orange 3-5, red >5 (sets on both logo-x and the counter)
+    updateAccentColor(JSON.parse(localStorage.getItem('tasks')).length - lineLength);
+
     setTimeout(() => {
        tasksDiv.querySelectorAll('.task').length == 0 ? empty.removeAttribute('hidden') : empty.setAttribute('hidden', '');
     },130);
 
+}
+
+//# Switch the brand accent (logo X + counter) based on remaining task count
+function updateAccentColor(remaining) {
+    let accent = 'rgb(149, 218, 162)';          // green: <=2 tasks
+    if (remaining > 5) {
+        accent = 'rgb(204, 65, 65)';            // red: >5 tasks
+    } else if (remaining >= 3) {
+        accent = 'hsl(33, 100%, 50%)';          // orange: 3-5 tasks
+    }
+    document.documentElement.style.setProperty('--accent', accent);
 }
 
 

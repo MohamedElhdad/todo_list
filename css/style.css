@@ -1,4 +1,4 @@
-﻿		/* Self-hosted fonts: Tajawal (Arabic) + Inter (Latin) - English in Inter, Arabic in Tajawal */
+		/* Self-hosted fonts: Tajawal (Arabic) + Inter (Latin) - English in Inter, Arabic in Tajawal */
 
 @font-face {
   font-family: 'Inter';
@@ -97,6 +97,7 @@ form .task-input.ar {
   --danger: hsl(0, 55%, 50%);
   --shadow: none;
   --font: 'Tajawal', 'Inter', system-ui, sans-serif;
+  --accent: var(--soft-green); /* switches by remaining: green <=2, orange 3-5, red >5 */
   color-scheme: dark;
 }
 
@@ -125,11 +126,10 @@ header h1 {
   font-family: cursive;
   font-size: 45px;
 
-  >span {
-    color: var(--soft-green);
+  >span.logo-x {
+    color: var(--accent);
     font-size: 55px;
-
-    
+    transition: color 350ms;
   }
 }
 
@@ -286,7 +286,8 @@ main .task-list {
   border: none;
   background: none;
   cursor: pointer;
-  color: var(--danger);
+  color: #cc4141;
+
   transition: transform 150ms, color 150ms, filter 150ms;
 }
 
@@ -522,12 +523,12 @@ main .task-list {
 .modal .modal-save {
   background: linear-gradient(180deg, rgb(163, 229, 175) 0%, rgb(139, 209, 152) 100%);
   color: hsl(200, 15%, 13%);
-  box-shadow: 0 2px 10px rgba(149, 218, 162, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  box-shadow: 0 2px 5px rgba(149, 218, 162, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 .modal .modal-save:hover {
   filter: brightness(1.05);
-  box-shadow: 0 5px 16px rgba(149, 218, 162, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  box-shadow: 0 4px 10px rgba(149, 218, 162, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 .modal .modal-save:active {
@@ -609,9 +610,6 @@ main .task-list {
 [data-theme="light"] .theme-toggle .icon-sun { display: none; }
 [data-theme="light"] .theme-toggle .icon-moon { display: block; }
 
-.count{
-  color: red;
-}
 
 /* Strike: native line-through fades in red */
 .line {
@@ -644,12 +642,12 @@ main header .clear:focus-visible,
 form .add {
   background: rgb(149, 218, 162);
   color: hsl(200, 15%, 12%);
-  box-shadow: 0 2px 10px rgba(149, 218, 162, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 5px rgba(149, 218, 162, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 form .add:hover:not(:disabled) {
   filter: brightness(1.06);
-  box-shadow: 0 4px 16px rgba(149, 218, 162, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 10px rgba(149, 218, 162, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 form .add:active:not(:disabled) {
@@ -665,12 +663,14 @@ form .add:disabled {
 
 /* ---------- Clear (danger) button ---------- */
 main header .clear {
-  background: linear-gradient(180deg, rgb(229, 99, 93) 0%, rgb(205, 72, 66) 100%);
+  background: linear-gradient(180deg, rgb(205, 56, 49) 0%, rgb(205, 72, 66) 100%);
+  background: linear-gradient(180deg, rgb(205, 56, 49) 0%, rgb(205, 72, 66) 100%);
+
   color: #ffffff;
   font-weight: 700;
   letter-spacing: 0.3px;
   padding: 8px 16px;
-  font-size: 13px;
+  font-size: 14px;
   border-radius: 20px;
   box-shadow: 0 2px 8px rgba(205, 72, 66, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   transition: transform 150ms, filter 150ms, box-shadow 150ms;
@@ -678,7 +678,7 @@ main header .clear {
 
 main header .clear:hover {
   filter: brightness(1.07);
-  box-shadow: 0 5px 15px rgba(205, 72, 66, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 10px rgba(205, 72, 66, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 main header .clear:active {
@@ -716,9 +716,9 @@ main header .clear:active {
   align-items: center;
   justify-content: center;
   border-radius: 11px;
-  background: rgba(229, 99, 93, 0.16);
-  color: rgb(229, 99, 93);
-  box-shadow: inset 0 0 0 1px rgba(229, 99, 93, 0.32);
+  background: rgba(204, 65, 65, 0.16);
+  color: rgb(204, 65, 65);
+  box-shadow: inset 0 0 0 1px rgba(204, 65, 65, 0.32);
 }
 
 [data-theme="light"] .clear-icon {
@@ -747,12 +747,12 @@ main header .clear:active {
 .modal .modal-save {
   background: linear-gradient(180deg, rgb(163, 229, 175) 0%, rgb(139, 209, 152) 100%);
   color: hsl(200, 15%, 13%);
-  box-shadow: 0 2px 10px rgba(149, 218, 162, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  box-shadow: 0 2px 5px rgba(149, 218, 162, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 .modal .modal-save:hover {
   filter: brightness(1.05);
-  box-shadow: 0 5px 16px rgba(149, 218, 162, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  box-shadow: 0 4px 10px rgba(149, 218, 162, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 .modal .modal-save:active {
@@ -761,14 +761,15 @@ main header .clear:active {
 
 /* Destructive: red gradient (Clear all) */
 .modal .modal-yes {
-  background: linear-gradient(180deg, rgb(229, 99, 93) 0%, rgb(205, 72, 66) 100%);
+  background: linear-gradient(180deg, rgb(205, 56, 49) 0%, rgb(205, 72, 66) 100%);
+  background: linear-gradient(180deg, rgb(205, 56, 49) 0%, rgb(205, 72, 66) 100%);
   color: #ffffff;
-  box-shadow: 0 2px 10px rgba(205, 72, 66, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    box-shadow: 0 2px 5px rgba(205, 72, 66, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .modal .modal-yes:hover {
   filter: brightness(1.06);
-  box-shadow: 0 5px 16px rgba(205, 72, 66, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 4px 10px rgba(205, 72, 66, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .modal .modal-yes:active {
@@ -864,7 +865,8 @@ main header .clear:active {
 
 /* ---------- Smaller pieces ---------- */
 .task .state:checked {
-  box-shadow: 0 0 0 3px rgba(149, 218, 162, 0.28);
+  box-shadow: 0 0 0 2px rgba(149, 218, 162, 0.28);
+
 }
 
 .task .state {
@@ -880,8 +882,9 @@ main header .clear:active {
 }
 
 .count {
-  color: var(--soft-green);
+  color: var(--accent);
   font-weight: 700;
+  transition: color 350ms;
 }
 
 .task-list div.empty {
